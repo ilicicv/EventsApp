@@ -1,9 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/events"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".EventsActivity">
+    tools:context=".EventsActivity"
+    android:orientation="vertical">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/welcome"
+            android:textStyle="bold"
+            android:textSize="24sp"
+            />
+
+        <TextView
+            android:id="@+id/textUsername"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:text="@string/admin"
+            android:textSize="16sp"
+            />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/fragmentLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="bottom"
+        >
+
+        <Button
+            android:id="@+id/btnEvents"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/events"
+            android:layout_weight="1"
+            android:backgroundTint="@color/blue"
+            />
+
+        <Button
+            android:id="@+id/btnMyEvents"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/my_events"
+            android:layout_weight="1"
+            android:backgroundTint="@color/blue_light"
+            />
+
+        <Button
+            android:id="@+id/btnFriends"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/friends"
+            android:layout_weight="1"
+            android:backgroundTint="@color/blue_grey"
+            android:enabled="false"
+            />
+
+    </LinearLayout>
+
+</LinearLayout>

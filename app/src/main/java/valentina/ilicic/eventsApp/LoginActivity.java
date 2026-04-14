@@ -60,12 +60,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
             if (user.equals("admin") && pass.equals("admin")) {
                 Intent intent = new Intent(this, EventsActivity.class);
-
                 Bundle login = new Bundle();
-                login.putString("username_key", user);
-
+                login.putString("username", user);
                 intent.putExtras(login);
-
                 startActivity(intent);
             } else {
                 editUsername.setError("Pogrešan username/password!");
@@ -80,13 +77,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 editUsernameReg.setError("Obavezno polje!");
             } else {
                 Intent intent = new Intent(this, EventsActivity.class);
-
                 Bundle register = new Bundle();
                 register.putString("username", user);
                 register.putString("email", email);
-
                 intent.putExtras(register);
-
                 startActivity(intent);
             }
         }
