@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingVertical="16dp" 
+        android:paddingVertical="16dp"
         >
 
         <TextView
@@ -56,7 +56,7 @@
         <Button
             android:id="@+id/btnEvents"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:text="@string/events"
             android:layout_weight="1"
             android:backgroundTint="@color/blue"
@@ -65,7 +65,7 @@
         <Button
             android:id="@+id/btnMyEvents"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:text="@string/my_events"
             android:layout_weight="1"
             android:backgroundTint="@color/blue_light"
@@ -74,7 +74,7 @@
         <Button
             android:id="@+id/btnFriends"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:text="@string/friends"
             android:layout_weight="1"
             android:backgroundTint="@color/blue_grey"

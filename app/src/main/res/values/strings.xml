@@ -25,4 +25,6 @@
     <string name="errorRegister">Required field!</string>
     <string name="passwordChanged">Password changed successfully!</string>
     <string name="samePass">New password can\'t be the same as old!</string>
+    <string name="interested_events_text">Interested Events</string>
+    <string name="attending_events_text">Attending Events</string>
 </resources>
