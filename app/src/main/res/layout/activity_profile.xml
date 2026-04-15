@@ -14,7 +14,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="@string/admin"
-        android:paddingTop="8dp"
+        android:paddingTop="16dp"
+        android:textSize="16sp"
         />
     <TextView
         android:id="@+id/textEmail"
@@ -22,6 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="@string/admin_gmail_com"
+        android:textSize="16sp"
         />
     <Button
         android:id="@+id/btnPassProfile"

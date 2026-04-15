@@ -65,7 +65,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 intent.putExtras(login);
                 startActivity(intent);
             } else {
-                editUsername.setError("Pogrešan username/password!");
+                editUsername.setError(getString(R.string.errorLogin));
             }
         }
         else if (id == R.id.btnRegisterForm) {
@@ -74,7 +74,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             String email = editEmailReg.getText().toString();
 
             if (user.isEmpty() || email.isEmpty() || pass.isEmpty()) {
-                editUsernameReg.setError("Obavezno polje!");
+                editUsernameReg.setError(getString(R.string.errorRegister));
             } else {
                 Intent intent = new Intent(this, EventsActivity.class);
                 Bundle register = new Bundle();
@@ -83,6 +83,18 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 intent.putExtras(register);
                 startActivity(intent);
             }
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (layoutLogin.getVisibility() == View.VISIBLE || layoutRegister.getVisibility() == View.VISIBLE) {
+
+            layoutLogin.setVisibility(View.GONE);
+            layoutRegister.setVisibility(View.GONE);
+            layoutStart.setVisibility(View.VISIBLE);
+        } else {
+            super.onBackPressed();
         }
     }
 }
