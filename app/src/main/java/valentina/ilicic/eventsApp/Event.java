@@ -1,3 +1,5 @@
+package valentina.ilicic.eventsApp;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -15,8 +17,8 @@ public class Event {
     private int ratingCount;
 
     public Event(String name, String description, String location, String dateTime,
-                 String category, int imageResId, boolean isPromoted,
-                 int capacity, int attendingCount, double averageRating, int ratingCount) {
+                 String category, int imageResId, boolean isPromoted, int capacity,
+                 int attendingCount, double averageRating, int ratingCount) {
         this.name = name;
         this.description = description;
         this.location = location;
@@ -31,8 +33,9 @@ public class Event {
     }
 
     public Event(String name, String description, String location, String dateTime,
-                 String category, int imageResId, int attendingCount,
-                 double averageRating, int ratingCount) {
+                 String category, int imageResId,
+                 int attendingCount, double averageRating, int ratingCount) {
+
         this.name = name;
         this.description = description;
         this.location = location;
@@ -47,7 +50,6 @@ public class Event {
     }
 
     public boolean isPast() {
-
         if (this.dateTime == null || this.dateTime.isEmpty())
             return false;
 
@@ -62,8 +64,8 @@ public class Event {
 
     public void addRating(int rating) {
         double sum = (this.averageRating * this.ratingCount) + rating;
-        this.averageRating = sum / this.ratingCount;
         this.ratingCount++;
+        this.averageRating = sum / this.ratingCount;
     }
 
     public String getName() {
