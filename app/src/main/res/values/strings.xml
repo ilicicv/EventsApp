@@ -27,4 +27,11 @@
     <string name="samePass">New password can\'t be the same as old!</string>
     <string name="interested_events_text">Interested Events</string>
     <string name="attending_events_text">Attending Events</string>
+    <string name="sve">sve</string>
+    <string name="party">party</string>
+    <string name="festival">festival</string>
+    <string name="theater">theater</string>
+    <string name="concert">concert</string>
+    <string name="exhibition">exhibition</string>
+    <string name="dodaj_event">dodaj event</string>
 </resources>

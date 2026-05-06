@@ -4,14 +4,100 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:paddingHorizontal="4dp"
+    android:paddingTop="4dp"
     tools:context=".EventsFragment">
 
-    <TextView
+    <HorizontalScrollView
+        android:id="@+id/scrollCategories"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/no_upcoming_events"
-        android:gravity="center"
-        android:textSize="16sp"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/categoryButtonContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnFilterSve"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sve"
+                />
+
+            <Button
+                android:id="@+id/btnFilterParty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/party"
+                android:backgroundTint="@color/grey"
+                />
+
+            <Button
+                android:id="@+id/btnFilterFestival"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/festival"
+                android:backgroundTint="@color/grey"
+                />
+
+            <Button
+                android:id="@+id/btnFilterTheater"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/theater"
+                android:backgroundTint="@color/grey"
+                />
+
+            <Button
+                android:id="@+id/btnFilterConcert"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/concert"
+                android:backgroundTint="@color/grey"
+                />
+
+            <Button
+                android:id="@+id/btnFilterExhibition"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/exhibition"
+                android:backgroundTint="@color/grey"
+                />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <Button
+        android:id="@+id/btnAddEvent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/dodaj_event"
         />
+
+    <LinearLayout
+        android:id="@+id/listContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:layout_weight="1"
+        >
+
+        <ListView
+            android:id="@+id/listEvents"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+
+        <TextView
+            android:id="@+id/txtNoEvents"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="@string/no_upcoming_events"
+            android:gravity="center"
+            android:visibility="gone"
+            />
+    </LinearLayout>
 
 </LinearLayout>
