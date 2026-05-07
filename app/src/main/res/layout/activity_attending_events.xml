@@ -5,16 +5,70 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".AttendingEventsActivity"
-    android:id="@+id/AttendingEvents"
-    android:orientation="vertical">
+    android:id="@+id/attendingEventsRoot"
+    android:orientation="vertical"
+    android:paddingHorizontal="8dp">
 
     <TextView
+        android:id="@+id/txtNoAttendingEvents"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="@string/attending_events_text"
+        android:text="@string/nemate_prijavljenih_doga_aja"
         android:gravity="center"
         android:textSize="18sp"
-        android:textStyle="bold"
-        />
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/layoutUpcoming"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/predstoje_i_doga_aji"
+            android:textColor="@color/grey_light"
+            android:textSize="16sp"
+            android:padding="10dp"
+            />
+
+        <ListView
+            android:id="@+id/listUpcoming"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="16dp"
+            android:divider="@android:color/transparent"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutPast"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/pro_li_doga_aji"
+            android:textSize="16sp"
+            android:padding="10dp"
+            />
+
+        <ListView
+            android:id="@+id/listPast"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="16dp"
+            android:divider="@android:color/transparent"
+            />
+
+    </LinearLayout>
 
 </LinearLayout>

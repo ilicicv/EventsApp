@@ -13,7 +13,7 @@ public class AppData {
     static {
         // PROŠLI DOGAĐAJI
         Event e1 = EventFactory.createRegularEvent(
-                "Jakov Jozinović u Spensu",
+                "Jakov Jozinović",
                 "Koncert mlade muzičke senzacije.",
                 "SPENS, Novi Sad",
                 "10.11.2025 20:30",
@@ -40,7 +40,7 @@ public class AppData {
         );
 
         Event e4 = EventFactory.createRegularEvent(
-                "Jesenja izložba ULUS",
+                "Jesenja izložba",
                 "Godišnja izložba radova eminentnih likovnih umetnika Srbije.",
                 "Galerija ULUS, Beograd",
                 "20.09.2025 18:00",
@@ -90,7 +90,7 @@ public class AppData {
         );
 
         Event e9 = EventFactory.createRegularEvent(
-                "Techno u Barutani",
+                "Party Barutana",
                 "Letnja žurka svetski poznatih DJ-a na Kalemegdanu.",
                 "Barutana, Beograd",
                 "22.05.2026 23:00",
@@ -181,7 +181,7 @@ public class AppData {
 
         allEvents.addAll(Arrays.asList(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18));
         interestedEvents.addAll(Arrays.asList(e2, e5, e10, e13, e14));
-        attendingEvents.addAll(Arrays.asList(e1, e3, e5, e6, e9, e12, e4, e15));
+        attendingEvents.addAll(Arrays.asList(e1, e3, e5, e6, e9, e12, e4, e16));
     }
 
     public static ArrayList<Event> getSorted(ArrayList<Event> list) {
