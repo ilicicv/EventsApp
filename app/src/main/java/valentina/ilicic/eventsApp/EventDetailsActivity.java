@@ -9,26 +9,21 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class EventDetailsActivity extends AppCompatActivity implements View.OnClickListener {
-
-    private ImageView imgEvent;
-    private TextView txtName, txtCategory, txtLocation, txtDateTime, txtDesc, txtCapacity, txtRating;
-    private Button btnInterested, btnAttending;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_details);
 
-        imgEvent = findViewById(R.id.imageEvents);
-        txtName = findViewById(R.id.txtName);
-        txtCategory = findViewById(R.id.txtCategory);
-        txtLocation = findViewById(R.id.txtLocation);
-        txtDateTime = findViewById(R.id.txtDateTime);
-        txtDesc = findViewById(R.id.txtDesc);
-        txtCapacity = findViewById(R.id.txtCapacity);
-        txtRating = findViewById(R.id.txtRating);
-        btnInterested = findViewById(R.id.btnInterested);
-        btnAttending = findViewById(R.id.btnAttending);
+        ImageView imgEvent = findViewById(R.id.imageEvents);
+        TextView txtName = findViewById(R.id.txtName);
+        TextView txtCategory = findViewById(R.id.txtCategory);
+        TextView txtLocation = findViewById(R.id.txtLocation);
+        TextView txtDateTime = findViewById(R.id.txtDateTime);
+        TextView txtDesc = findViewById(R.id.txtDesc);
+        TextView txtCapacity = findViewById(R.id.txtCapacity);
+        TextView txtRating = findViewById(R.id.txtRating);
+        Button btnInterested = findViewById(R.id.btnInterested);
+        Button btnAttending = findViewById(R.id.btnAttending);
 
         String eventName = getIntent().getStringExtra("event_name");
         Event event = AppData.findByName(eventName);
@@ -67,9 +62,9 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.btnInterested) {
-            Toast.makeText(this, "Dodat u zainteresovane.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(EventDetailsActivity.this, R.string.added_to_interested, Toast.LENGTH_SHORT).show();
         } else if (view.getId() == R.id.btnAttending) {
-            Toast.makeText(this, "Prijavili ste se na događaj.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(EventDetailsActivity.this, R.string.signed_up, Toast.LENGTH_SHORT).show();
         }
     }
 }

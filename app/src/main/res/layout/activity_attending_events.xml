@@ -30,7 +30,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/predstoje_i_doga_aji"
-            android:textColor="@color/grey_light"
             android:textSize="16sp"
             android:padding="10dp"
             />

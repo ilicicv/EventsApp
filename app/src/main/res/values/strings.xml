@@ -51,4 +51,10 @@
     <string name="predstoje_i_doga_aji">Predstojeći događaji</string>
     <string name="pro_li_doga_aji">Prošli događaji</string>
     <string name="oceni">OCENI</string>
+    <string name="porvrdi_ocenu">Porvrdi ocenu</string>
+    <string name="error_rating">Odaberite ocenu pre potvrde.</string>
+    <string name="rating_saved">Ocena je sačuvana.</string>
+    <string name="added_to_interested">Dodat u zainteresovane.</string>
+    <string name="signed_up">Prijavili ste se na događaj.</string>
+    <string name="oceni_doga_aj">Oceni događaj</string>
 </resources>

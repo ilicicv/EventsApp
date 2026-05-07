@@ -63,7 +63,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/lokacija"
-                    android:textColor="@color/grey_light"
                     android:textSize="14sp"
                     />
 
@@ -72,7 +71,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/datum_i_vrijeme"
-                    android:textColor="@color/grey_light"
                     android:textSize="14sp"
                     />
 
