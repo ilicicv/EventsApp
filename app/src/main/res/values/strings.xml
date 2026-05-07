@@ -27,6 +27,7 @@
     <string name="samePass">New password can\'t be the same as old!</string>
     <string name="interested_events_text">Interested Events</string>
     <string name="attending_events_text">Attending Events</string>
+
     <string name="sve">sve</string>
     <string name="party">party</string>
     <string name="festival">festival</string>
@@ -38,9 +39,11 @@
     <string name="lokacija">Lokacija</string>
     <string name="naziv_doga_aja">Naziv Događaja</string>
     <string name="datum_i_vrijeme">Datum i vrijeme</string>
-    <string name="slobodnih_mjesta">Slobodnih mjesta:</string>
-    <string name="x">X</string>
-    <string name="kosa_crta">/</string>
-    <string name="y">Y</string>
     <string name="stand_up_theater"><![CDATA[Stand-Up & Theater]]></string>
+    <string name="description">Description</string>
+    <string name="interested">Interested</string>
+    <string name="attending">Attending</string>
+    <string name="jo_uvek_nema_ocena">Još uvek nema ocena</string>
+    <string name="prose_na_ocena_0_0_0_ocena">Prosečna ocena: %1$.1f (%2$d ocena)</string>
+    <string name="slobodnih_mesta_x_y">Slobodnih mesta: %1$d/%2$d</string>
 </resources>

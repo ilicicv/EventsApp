@@ -1,9 +1,121 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".EventDetailsActivity">
+    tools:context=".EventDetailsActivity"
+    android:orientation="vertical"
+    android:paddingHorizontal="8dp"
+    android:paddingTop="8dp">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <ImageView
+        android:id="@+id/imageEvents"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:scaleType="centerCrop"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/txtName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/naziv_doga_aja"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingBottom="4dp"
+            />
+
+        <TextView
+            android:id="@+id/txtCategory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/purple_500"
+            android:text="@string/kategorija"
+            android:textSize="18sp"
+            android:paddingBottom="10dp"
+            />
+
+        <TextView
+            android:id="@+id/txtLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/lokacija"
+            android:textColor="@color/grey_light"
+            android:textSize="18sp"
+            />
+
+        <TextView
+            android:id="@+id/txtDateTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/datum_i_vrijeme"
+            android:textColor="@color/grey_light"
+            android:textSize="18sp"
+            android:paddingBottom="10dp"
+            />
+
+        <TextView
+            android:id="@+id/txtDesc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/description"
+            android:textColor="@color/grey_light"
+            android:textSize="18sp"
+            android:paddingBottom="10dp"
+            />
+
+        <TextView
+            android:id="@+id/txtCapacity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/slobodnih_mesta_x_y"
+            android:textColor="@color/orange"
+            android:textSize="18sp"
+            android:visibility="gone"
+            android:paddingBottom="10dp"
+            />
+
+        <TextView
+            android:id="@+id/txtRating"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/prose_na_ocena_0_0_0_ocena"
+            android:textColor="@color/grey_light"
+            android:textSize="18sp"
+            />
+
+    </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="bottom">
+
+            <Button
+                android:id="@+id/btnInterested"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:text="@string/interested"
+                android:layout_weight="1"
+                />
+
+            <Button
+                android:id="@+id/btnAttending"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:text="@string/attending"
+                android:layout_weight="1"
+                />
+        </LinearLayout>
+
+</LinearLayout>

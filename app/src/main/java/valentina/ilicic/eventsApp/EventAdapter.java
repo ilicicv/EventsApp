@@ -17,7 +17,7 @@ public class EventAdapter extends BaseAdapter {
 
     public EventAdapter(Context context){
         this.context = context;
-        events = new ArrayList<Event>();
+        events = new ArrayList<>();
     }
 
     public void setEvents(ArrayList<Event> eventsList){
@@ -64,9 +64,7 @@ public class EventAdapter extends BaseAdapter {
             vh.txtCategory = convertView.findViewById(R.id.txtCategory);
             vh.txtLocation = convertView.findViewById(R.id.txtLocation);
             vh.txtDateTime = convertView.findViewById(R.id.txtDateTime);
-            vh.capacityLayout = (LinearLayout) convertView.findViewById(R.id.txtCapacity).getParent();
-            vh.txtCapacityNumX = convertView.findViewById(R.id.txtCapacityNumX);
-            vh.txtCapacityNumY = convertView.findViewById(R.id.txtCapacityNumY);
+            vh.txtCapacity = convertView.findViewById(R.id.txtCapacity);
 
             convertView.setTag(vh);
         } else {
@@ -84,16 +82,14 @@ public class EventAdapter extends BaseAdapter {
 
             if (currentEvent.isPromoted()) {
                 vh.txtFeatured.setVisibility(View.VISIBLE);
-                vh.capacityLayout.setVisibility(View.VISIBLE);
+                vh.txtCapacity.setVisibility(View.VISIBLE);
 
                 int freeSeats = currentEvent.getCapacity() - currentEvent.getAttendingCount();
-                vh.txtCapacityNumX.setText(String.valueOf(freeSeats));
-                vh.txtCapacityNumY.setText(String.valueOf(currentEvent.getCapacity()));
-
+                vh.txtCapacity.setText(context.getString(R.string.slobodnih_mesta_x_y, freeSeats, currentEvent.getCapacity()));
                 vh.layoutList.setBackgroundColor(context.getColor(R.color.orange_light));
             } else {
                 vh.txtFeatured.setVisibility(View.GONE);
-                vh.capacityLayout.setVisibility(View.GONE);
+                vh.txtCapacity.setVisibility(View.GONE);
                 vh.layoutList.setBackgroundColor(context.getColor(android.R.color.transparent));
             }
         }
@@ -109,9 +105,7 @@ public class EventAdapter extends BaseAdapter {
         TextView txtCategory;
         TextView txtLocation;
         TextView txtDateTime;
-        LinearLayout capacityLayout;
-        TextView txtCapacityNumX;
-        TextView txtCapacityNumY;
+        TextView txtCapacity;
     }
 
 }

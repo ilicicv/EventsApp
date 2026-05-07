@@ -16,5 +16,6 @@
     <color name="grey">#2B2B2B</color>
     <color name="orange">#FF9800</color>
     <color name="orange_light">#FFF2E0</color>
+    <color name="grey_light">#666666</color>
 
 </resources>

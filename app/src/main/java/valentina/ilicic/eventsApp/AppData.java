@@ -51,8 +51,8 @@ public class AppData {
         // PROMOTED
         Event e5 = EventFactory.createPromotedEvent(
                 "EXIT Festival",
-                "Najveći muzički festival u ovom delu Evrope na Petrovaradinskoj tvrđavi.",
-                "Petrovaradinska tvrđava, Novi Sad",
+                "Najveći muzički festival u regiji.",
+                "Petrovaradin, Novi Sad",
                 "2025-07-10 18:00",
                 "Festival",
                 android.R.drawable.ic_menu_slideshow,
