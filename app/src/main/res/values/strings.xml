@@ -46,4 +46,5 @@
     <string name="jo_uvek_nema_ocena">Još uvek nema ocena</string>
     <string name="prose_na_ocena_0_0_0_ocena">Prosečna ocena: %1$.1f (%2$d ocena)</string>
     <string name="slobodnih_mesta_x_y">Slobodnih mesta: %1$d/%2$d</string>
+    <string name="nemate_zainteresovanih_doga_aja">Nemate zainteresovanih događaja</string>
 </resources>

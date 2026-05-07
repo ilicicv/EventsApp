@@ -6,15 +6,22 @@
     android:layout_height="match_parent"
     tools:context=".InterestedEventsActivity"
     android:id="@+id/interestedEvents"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingTop="8dp">
 
-    <TextView
+    <ListView
+        android:id="@+id/listInterestedEvents"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="@string/interested_events_text"
+        />
+
+    <TextView
+        android:id="@+id/txtNoInterestedEvents"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="@string/nemate_zainteresovanih_doga_aja"
         android:gravity="center"
-        android:textSize="18sp"
-        android:textStyle="bold"
+        android:visibility="gone"
         />
 
 </LinearLayout>

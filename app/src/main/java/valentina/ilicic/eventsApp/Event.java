@@ -54,7 +54,7 @@ public class Event {
             return false;
 
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
             LocalDateTime eventTime = LocalDateTime.parse(this.dateTime, formatter);
             return eventTime.isBefore(LocalDateTime.now());
         } catch (Exception e) {

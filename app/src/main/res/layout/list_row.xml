@@ -56,7 +56,6 @@
                     android:textColor="@color/purple_500"
                     android:text="@string/kategorija"
                     android:textSize="14sp"
-                    android:textStyle="bold"
                     />
 
                 <TextView
