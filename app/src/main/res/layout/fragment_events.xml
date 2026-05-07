@@ -15,16 +15,17 @@
         android:scrollbars="none">
 
         <LinearLayout
-            android:id="@+id/categoryButtonContainer"
+            android:id="@+id/layoutCategoryBtns"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/btnFilterSve"
+                android:id="@+id/btnFilterAll"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/sve"
+                android:backgroundTint="@color/grey"
                 />
 
             <Button
@@ -47,7 +48,7 @@
                 android:id="@+id/btnFilterTheater"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/theater"
+                android:text="@string/stand_up_theater"
                 android:backgroundTint="@color/grey"
                 />
 

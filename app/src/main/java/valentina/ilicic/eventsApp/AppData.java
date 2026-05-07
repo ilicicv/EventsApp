@@ -22,12 +22,12 @@ public class AppData {
         );
 
         Event e2 = EventFactory.createRegularEvent(
-                "Kerber u Nišu",
-                "Ekskluzivni akustični nastup legendarnog niškog rok sastava.",
-                "Klub Feedback, Niš",
-                "2025-12-15 21:00",
-                "Concert",
-                android.R.drawable.ic_media_play
+                "NEON Party",
+                "Sjajan neon doživljaj uz najbolje DJ izvođače.",
+                "Štark Arena, Beograd",
+                "2026-05-10 22:00",
+                "Party",
+                android.R.drawable.ic_menu_camera
         );
 
         Event e3 = EventFactory.createRegularEvent(
@@ -50,7 +50,7 @@ public class AppData {
 
         // PROMOTED
         Event e5 = EventFactory.createPromotedEvent(
-                "EXIT Festival 2025",
+                "EXIT Festival",
                 "Najveći muzički festival u ovom delu Evrope na Petrovaradinskoj tvrđavi.",
                 "Petrovaradinska tvrđava, Novi Sad",
                 "2025-07-10 18:00",
@@ -99,12 +99,12 @@ public class AppData {
         );
 
         Event e10 = EventFactory.createRegularEvent(
-                "Beogradski Sajam Knjiga",
-                "Međunarodni sajam knjiga.",
-                "Beogradski Sajam, Beograd",
-                "2026-10-20 10:00",
-                "Exhibition",
-                android.R.drawable.ic_menu_gallery
+                "Beach Party Palić",
+                "Provod na obali jezera uz najbolje letnje hitove.",
+                "Ženski štrand, Palić",
+                "2026-07-15 16:00",
+                "Party",
+                android.R.drawable.ic_menu_camera
         );
 
         Event e11 = EventFactory.createRegularEvent(

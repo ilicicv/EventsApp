@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:backgroundTint="@color/orange_light"
+    android:id="@+id/layoutList">
+
+        <TextView
+            android:id="@+id/txtFeatured"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/orange"
+            android:text="@string/featured"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:paddingVertical="2dp"
+            android:paddingHorizontal="8dp"
+            android:visibility="gone"
+            />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/imageEvents"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:scaleType="centerCrop"
+                android:paddingHorizontal="8dp"
+                />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/txtName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/naziv_doga_aja"
+                    android:textColor="@color/grey"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    />
+
+                <TextView
+                    android:id="@+id/txtCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/purple_500"
+                    android:text="@string/kategorija"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    />
+
+                <TextView
+                    android:id="@+id/txtLocation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/lokacija"
+                    android:textColor="@color/grey"
+                    android:textSize="14sp"
+                    />
+
+                <TextView
+                    android:id="@+id/txtDateTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/datum_i_vrijeme"
+                    android:textColor="@color/grey"
+                    android:textSize="14sp"
+                    />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="invisible"
+                    android:paddingBottom="4dp">
+
+                    <TextView
+                        android:id="@+id/txtCapacity"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/slobodnih_mjesta"
+                        android:textColor="@color/orange"
+                        android:textSize="14sp"
+                        />
+
+                    <TextView
+                        android:id="@+id/txtCapacityNumX"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/x"
+                        android:textColor="@color/orange"
+                        android:textSize="14sp"
+                        />
+
+                    <TextView
+                        android:id="@+id/txtCapacityNumDiv"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/kosa_crta"
+                        android:textColor="@color/orange"
+                        android:textSize="14sp"
+                        />
+
+                    <TextView
+                        android:id="@+id/txtCapacityNumY"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/y"
+                        android:textColor="@color/orange"
+                        android:textSize="14sp"
+                        />
+
+                </LinearLayout>
+            </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
