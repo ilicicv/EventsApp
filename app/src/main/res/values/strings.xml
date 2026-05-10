@@ -73,6 +73,7 @@
     <string name="msg_otkazano">Otkazano prisustvo.</string>
     <string name="msg_prosao_dogadjaj">Ovaj događaj je završen i prijave nisu moguće.</string>
     <string name="msg_nema_slobodnih">Nema više slobodnih mesta!</string>
+    <string name="msg_vec_prijavljen">Već ste se prijavili na ovaj događaj!</string>
 
     <string-array name="categories_array">
         <item>Party</item>

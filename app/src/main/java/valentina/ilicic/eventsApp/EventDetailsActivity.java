@@ -81,9 +81,9 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
             }
 
         } else if (id == R.id.btnAttending) {
-            if (!AppData.attendingEvents.contains(event)) {
-                AppData.attendingEvents.add(event);
-                Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
+            if (AppData.attendingEvents.contains(event)) {
+                Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
+                return;
             }
 
             if (event.isPromoted()) {
@@ -100,7 +100,7 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
                 } else {
                     Toast.makeText(this, R.string.msg_nema_slobodnih, Toast.LENGTH_SHORT).show();
                 }
-            } else {
+            } else if (!AppData.attendingEvents.contains(event)) {
                 AppData.attendingEvents.add(event);
                 Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
             }

@@ -59,6 +59,7 @@
             android:layout_height="match_parent"
             android:text="@string/events"
             android:layout_weight="1"
+            android:textSize="12sp"
             android:backgroundTint="@color/blue"
             />
 
@@ -68,6 +69,7 @@
             android:layout_height="match_parent"
             android:text="@string/my_events"
             android:layout_weight="1"
+            android:textSize="12sp"
             android:backgroundTint="@color/blue"
             />
 
@@ -77,6 +79,8 @@
             android:layout_height="match_parent"
             android:text="@string/friends"
             android:layout_weight="1"
+            android:textSize="12sp"
+
             android:backgroundTint="@color/blue_grey"
             android:enabled="false"
             />
