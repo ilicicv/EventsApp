@@ -50,6 +50,7 @@
     <string name="nemate_prijavljenih_doga_aja">Nemate prijavljenih događaja</string>
     <string name="predstoje_i_doga_aji">Predstojeći događaji</string>
     <string name="pro_li_doga_aji">Prošli događaji</string>
+
     <string name="oceni">OCENI</string>
     <string name="porvrdi_ocenu">Porvrdi ocenu</string>
     <string name="error_rating">Odaberite ocenu pre potvrde.</string>
@@ -57,4 +58,24 @@
     <string name="added_to_interested">Dodat u zainteresovane.</string>
     <string name="signed_up">Prijavili ste se na događaj.</string>
     <string name="oceni_doga_aj">Oceni događaj</string>
+    <string name="opis">Opis</string>
+    <string name="dd_mm_yyyy_hh_mm">dd.MM.yyyy HH:mm</string>
+    <string name="promoted_event">Promoted event</string>
+    <string name="kreiraj_event">kreiraj event</string>
+    <string name="kapacitet">Kapacitet</string>
+    <string name="popunite_polja">Popunite sva obavezna polja.</string>
+    <string name="msg_ispravan_kapacitet">Unesite ispravan kapacitet.</string>
+    <string name="msg_kreiran_dogadjaj">Događaj uspešno kreiran.</string>
+    <string name="msg_format_datuma">Neispravan datum/vreme! \nFormat: dd.mm.yyyy HH:mm</string>
+    <string name="msg_vec_dodat">Već ste dodali ovaj događaj u zainteresovane!</string>
+    <string name="msg_vec_attending">Već ste na listi učesnika!</string>
+    <string name="msg_uklonjeno_zainteresovani">Uklonjeno iz zainteresovanih.</string>
+    <string name="msg_otkazano">Otkazano prisustvo.</string>
+
+    <string-array name="categories_array">
+        <item>Party</item>
+        <item>Festival</item>
+        <item>Stand-Up &amp; Theater</item> <item>Concert</item>
+        <item>Exhibition</item>
+    </string-array>
 </resources>

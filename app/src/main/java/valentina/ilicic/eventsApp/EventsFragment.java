@@ -76,7 +76,7 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
             b.setBackgroundColor(getContext().getColor(R.color.purple_500));
 
             String category = b.getText().toString();
-            if (category.equalsIgnoreCase(getString(R.string.sve)) || category.equalsIgnoreCase("Sve")) {
+            if (category.equalsIgnoreCase(getString(R.string.sve))) {
                 adapter.setEvents(AppData.getSortedEvents());
             } else {
                 ArrayList<Event> events = AppData.getSortedEventsByCategory(category);
@@ -95,4 +95,17 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
             startActivity(intent);
         }
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        ArrayList<Event> updatedList = AppData.getSortedEvents();
+
+        if (adapter != null) {
+            adapter.setEvents(updatedList);
+            adapter.notifyDataSetChanged();
+        }
+    }
+
 }

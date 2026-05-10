@@ -10,6 +10,9 @@ public class AppData {
     public static ArrayList<Event> interestedEvents = new ArrayList<>();
     public static ArrayList<Event> attendingEvents = new ArrayList<>();
 
+    // privremeno cuvanje dok se ne doda baza
+    public static ArrayList<String> ratedEvents = new ArrayList<>();
+
     static {
         // PROŠLI DOGAĐAJI
         Event e1 = EventFactory.createRegularEvent(

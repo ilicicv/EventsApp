@@ -8,9 +8,11 @@ import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import java.util.ArrayList;
 
-public class AttendingEventsActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+public class AttendingEventsActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
 
     private ListView listUpcoming, listPast;
     private TextView empty;
@@ -54,6 +56,7 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
                 adapterUpcoming.setEvents(upcoming);
                 listUpcoming.setAdapter(adapterUpcoming);
                 listUpcoming.setOnItemClickListener(this);
+                listUpcoming.setOnItemLongClickListener(this);
             } else {
                 layoutUpcoming.setVisibility(View.GONE);
             }
@@ -77,6 +80,44 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
             Intent intent = new Intent(this, EventDetailsActivity.class);
             intent.putExtra("event_name", event.getName());
             startActivity(intent);
+        }
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+        Event event = (Event) adapterView.getItemAtPosition(i);
+
+        if (event != null) {
+            AppData.attendingEvents.remove(event);
+
+            ArrayList<Event> upcoming = new ArrayList<>();
+            for (Event e : AppData.attendingEvents) {
+                if (!e.isPast()) {
+                    upcoming.add(e);
+                }
+            }
+
+            if (adapterUpcoming != null) {
+                adapterUpcoming.setEvents(upcoming);
+                if (upcoming.isEmpty()) {
+                    layoutUpcoming.setVisibility(View.GONE);
+                }
+            }
+
+            if (AppData.attendingEvents.isEmpty()) {
+                empty.setVisibility(View.VISIBLE);
+            }
+
+            Toast.makeText(this, R.string.msg_otkazano, Toast.LENGTH_SHORT).show();
+        }
+        return true;
+    }
+
+
+    protected  void onResume(){
+        super.onResume();
+        if(adapterPast!=null){
+            adapterPast.notifyDataSetChanged();
         }
     }
 }

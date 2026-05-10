@@ -8,9 +8,10 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
-public class InterestedEventsActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+public class InterestedEventsActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
 
     private ListView listInterested;
     private TextView empty;
@@ -29,6 +30,7 @@ public class InterestedEventsActivity extends AppCompatActivity implements Adapt
         listInterested.setAdapter(adapter);
 
         listInterested.setOnItemClickListener(this);
+        listInterested.setOnItemLongClickListener(this);
     }
 
     @Override
@@ -40,5 +42,19 @@ public class InterestedEventsActivity extends AppCompatActivity implements Adapt
             intent.putExtra("event_name", event.getName());
             startActivity(intent);
         }
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+        Event event = (Event) adapter.getItem(i);
+
+        if (event != null) {
+            AppData.interestedEvents.remove(event);
+            adapter.setEvents(AppData.getSorted(AppData.interestedEvents));
+            adapter.notifyDataSetChanged();
+
+            Toast.makeText(this, R.string.msg_uklonjeno_zainteresovani, Toast.LENGTH_SHORT).show();
+        }
+        return true;
     }
 }

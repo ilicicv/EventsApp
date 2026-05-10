@@ -52,6 +52,11 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
                 for (Event e : AppData.allEvents) {
                     if (e.getName().equals(eventName)) {
                         e.addRating(selected);
+
+                        if (!AppData.ratedEvents.contains(eventName)) {
+                            AppData.ratedEvents.add(eventName);
+                        }
+
                         break;
                     }
                 }

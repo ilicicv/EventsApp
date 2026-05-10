@@ -116,17 +116,26 @@ public class EventAdapter extends BaseAdapter {
             if (vh.btnRate != null) {
                 if (currentEvent.isPast()) {
                     vh.btnRate.setVisibility(View.VISIBLE);
-                    vh.btnRate.setOnClickListener(v -> {
-                        Intent intent = new Intent(context, RatingActivity.class);
-                        intent.putExtra("event_name", currentEvent.getName());
-                        context.startActivity(intent);
-                    });
+
+                    if (!AppData.ratedEvents.contains(currentEvent.getName())) {
+                        vh.btnRate.setEnabled(true);
+                        vh.btnRate.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent intent = new Intent(context, RatingActivity.class);
+                                intent.putExtra("event_name", currentEvent.getName());
+                                context.startActivity(intent);
+                            }
+                        });
+                    } else {
+                        vh.btnRate.setEnabled(false);
+                    }
+
                 } else {
                     vh.btnRate.setVisibility(View.GONE);
                 }
             }
         }
-
         return convertView;
     }
 

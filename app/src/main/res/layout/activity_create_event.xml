@@ -1,9 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".CreateEventActivity">
+    tools:context=".CreateEventActivity"
+    android:orientation="vertical"
+    android:paddingTop="8dp"
+    android:paddingHorizontal="8dp">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <EditText
+        android:id="@+id/editName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/naziv_doga_aja"
+        android:inputType="text"
+        />
+
+    <EditText
+        android:id="@+id/editDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/opis"
+        android:inputType="textMultiLine"
+        android:paddingTop="20dp"
+        />
+
+    <EditText
+        android:id="@+id/editLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/lokacija"
+        android:inputType="text"
+        />
+
+    <EditText
+        android:id="@+id/editDateTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/dd_mm_yyyy_hh_mm"
+        android:digits="0123456789. :"/>"
+        />
+
+    <EditText
+        android:id="@+id/editCapacity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/kapacitet"
+        android:inputType="number"
+        android:visibility="gone"
+        />
+
+    <Spinner
+        android:id="@+id/spinnerCategory"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="10dp"
+        android:entries="@array/categories_array"
+        />
+
+
+    <CheckBox
+        android:id="@+id/cbPromoted"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/promoted_event"
+        android:textSize="16sp"
+        />
+
+
+    <Button
+        android:id="@+id/btnCreateEvent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/kreiraj_event"
+        android:textSize="16sp"
+        />
+
+
+</LinearLayout>

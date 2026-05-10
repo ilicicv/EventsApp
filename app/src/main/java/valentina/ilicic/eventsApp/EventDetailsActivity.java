@@ -9,6 +9,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class EventDetailsActivity extends AppCompatActivity implements View.OnClickListener {
+    private String eventName;
+    private Event event;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,8 +28,8 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         Button btnInterested = findViewById(R.id.btnInterested);
         Button btnAttending = findViewById(R.id.btnAttending);
 
-        String eventName = getIntent().getStringExtra("event_name");
-        Event event = AppData.findByName(eventName);
+        eventName = getIntent().getStringExtra("event_name");
+        event = AppData.findByName(eventName);
 
         if (event != null) {
             txtName.setText(event.getName());
@@ -39,7 +42,6 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
             if (event.isPromoted()) {
                 txtCapacity.setVisibility(View.VISIBLE);
                 int freeSeats = event.getCapacity() - event.getAttendingCount();
-
                 txtCapacity.setText(getString(R.string.slobodnih_mesta_x_y, freeSeats, event.getCapacity()));
             } else {
                 txtCapacity.setVisibility(View.GONE);
@@ -61,10 +63,25 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onClick(View view) {
-        if (view.getId() == R.id.btnInterested) {
-            Toast.makeText(EventDetailsActivity.this, R.string.added_to_interested, Toast.LENGTH_SHORT).show();
-        } else if (view.getId() == R.id.btnAttending) {
-            Toast.makeText(EventDetailsActivity.this, R.string.signed_up, Toast.LENGTH_SHORT).show();
+        if (event == null) return;
+
+        int id = view.getId();
+
+        if (id == R.id.btnInterested) {
+            if (!AppData.interestedEvents.contains(event)) {
+                AppData.interestedEvents.add(event);
+                Toast.makeText(this, R.string.added_to_interested, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, R.string.msg_vec_dodat, Toast.LENGTH_SHORT).show();
+            }
+
+        } else if (id == R.id.btnAttending) {
+            if (!AppData.attendingEvents.contains(event)) {
+                AppData.attendingEvents.add(event);
+                Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, R.string.msg_vec_attending, Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }
