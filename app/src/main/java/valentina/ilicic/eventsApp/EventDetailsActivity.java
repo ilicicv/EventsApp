@@ -11,6 +11,7 @@ import android.widget.Toast;
 public class EventDetailsActivity extends AppCompatActivity implements View.OnClickListener {
     private String eventName;
     private Event event;
+    TextView txtCapacity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,7 +24,7 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         TextView txtLocation = findViewById(R.id.txtLocation);
         TextView txtDateTime = findViewById(R.id.txtDateTime);
         TextView txtDesc = findViewById(R.id.txtDesc);
-        TextView txtCapacity = findViewById(R.id.txtCapacity);
+        txtCapacity = findViewById(R.id.txtCapacity);
         TextView txtRating = findViewById(R.id.txtRating);
         Button btnInterested = findViewById(R.id.btnInterested);
         Button btnAttending = findViewById(R.id.btnAttending);
@@ -65,6 +66,10 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
     public void onClick(View view) {
         if (event == null) return;
 
+        if (event.isPast()) {
+            Toast.makeText(this, R.string.msg_prosao_dogadjaj, Toast.LENGTH_SHORT).show();
+            return;
+        }
         int id = view.getId();
 
         if (id == R.id.btnInterested) {
@@ -79,8 +84,25 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
             if (!AppData.attendingEvents.contains(event)) {
                 AppData.attendingEvents.add(event);
                 Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
+            }
+
+            if (event.isPromoted()) {
+                int freeSeats = event.getCapacity() - event.getAttendingCount();
+
+                if (freeSeats > 0) {
+                    event.setAttendingCount(event.getAttendingCount() + 1);
+
+                    AppData.attendingEvents.add(event);
+                    Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
+
+                    int newFreeSeats = event.getCapacity() - event.getAttendingCount();
+                    txtCapacity.setText(getString(R.string.slobodnih_mesta_x_y, newFreeSeats, event.getCapacity()));
+                } else {
+                    Toast.makeText(this, R.string.msg_nema_slobodnih, Toast.LENGTH_SHORT).show();
+                }
             } else {
-                Toast.makeText(this, R.string.msg_vec_attending, Toast.LENGTH_SHORT).show();
+                AppData.attendingEvents.add(event);
+                Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
             }
         }
     }

@@ -10,6 +10,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+
 public class CreateEventActivity extends AppCompatActivity implements View.OnClickListener {
 
     private EditText editName, editDescription, editLocation, editDateTime, editCapacity;
@@ -112,11 +114,22 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-    private boolean isValidDateTime(String dateTimeStr) {
-        java.text.SimpleDateFormat date = new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm");
+    private boolean isValidDateTime(String dateTime) {
+        String regex = "^\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}$";
+
+        if (!dateTime.trim().matches(regex)) {
+            return false;
+        }
+
+        SimpleDateFormat date = new SimpleDateFormat("dd.MM.yyyy HH:mm");
         date.setLenient(false);
+
         try {
-            date.parse(dateTimeStr.trim());
+            java.util.Date inputDate = date.parse(dateTime.trim());
+            java.util.Date now = new java.util.Date();
+            if (inputDate.before(now)) {
+                return false;
+            }
         } catch (java.text.ParseException e) {
             return false;
         }

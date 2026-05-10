@@ -88,13 +88,10 @@ public class EventAdapter extends BaseAdapter {
             if (vh.txtCategory != null) vh.txtCategory.setText(currentEvent.getCategory());
             if (vh.txtLocation != null) vh.txtLocation.setText(currentEvent.getLocation());
             if (vh.txtDateTime != null) vh.txtDateTime.setText(currentEvent.getDateTime());
-
-            if (vh.imageEvents != null) {
-                vh.imageEvents.setImageResource(currentEvent.getImageResId());
-            }
+            if (vh.imageEvents != null) vh.imageEvents.setImageResource(currentEvent.getImageResId());
 
             if (vh.txtFeatured != null && vh.txtCapacity != null) {
-                if (currentEvent.isPromoted()) {
+                if (currentEvent.isPromoted() && !currentEvent.isPast()) {
                     vh.txtFeatured.setVisibility(View.VISIBLE);
                     vh.txtCapacity.setVisibility(View.VISIBLE);
 

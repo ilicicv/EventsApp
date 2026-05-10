@@ -88,6 +88,10 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
         Event event = (Event) adapterView.getItemAtPosition(i);
 
         if (event != null) {
+            if (event.isPromoted() && event.getAttendingCount() > 0) {
+                event.setAttendingCount(event.getAttendingCount() - 1);
+            }
+
             AppData.attendingEvents.remove(event);
 
             ArrayList<Event> upcoming = new ArrayList<>();

@@ -1,5 +1,6 @@
 package valentina.ilicic.eventsApp;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -56,7 +57,7 @@ public class AppData {
                 "EXIT Festival",
                 "Najveći muzički festival u regiji.",
                 "Petrovaradin, Novi Sad",
-                "10.07.2025 18:00",
+                "10.07.2026 18:00",
                 "Festival",
                 android.R.drawable.ic_menu_slideshow,
                 50000
@@ -185,20 +186,52 @@ public class AppData {
         allEvents.addAll(Arrays.asList(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18));
         interestedEvents.addAll(Arrays.asList(e2, e5, e10, e13, e14));
         attendingEvents.addAll(Arrays.asList(e1, e3, e5, e6, e9, e12, e4, e16));
+        e5.setAttendingCount(1);
+        e6.setAttendingCount(1);
     }
 
     public static ArrayList<Event> getSorted(ArrayList<Event> list) {
-        ArrayList<Event> sortedList = new ArrayList<>(list);
-        sortedList.sort(new Comparator<Event>() {
+        ArrayList<Event> upcoming = new ArrayList<>();
+        ArrayList<Event> past = new ArrayList<>();
+
+        for (Event e : list) {
+            if (e.isPast()) {
+                past.add(e);
+            } else {
+                upcoming.add(e);
+            }
+        }
+
+        SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm");
+
+        upcoming.sort(new Comparator<Event>() {
             @Override
             public int compare(Event e1, Event e2) {
                 int promotedCompare = Boolean.compare(e2.isPromoted(), e1.isPromoted());
                 if (promotedCompare != 0) return promotedCompare;
 
-                return e1.getDateTime().compareTo(e2.getDateTime());
+                try {
+                    return sdf.parse(e1.getDateTime()).compareTo(sdf.parse(e2.getDateTime()));
+                } catch (java.text.ParseException e) {
+                    return 0;
+                }
             }
         });
-        return sortedList;
+
+        past.sort(new Comparator<Event>() {
+            @Override
+            public int compare(Event e1, Event e2) {
+                try {
+                    return sdf.parse(e2.getDateTime()).compareTo(sdf.parse(e1.getDateTime()));
+                } catch (Exception e) {
+                    return 0;
+                }
+            }
+        });
+
+        ArrayList<Event> finalResult = new ArrayList<>(upcoming);
+        finalResult.addAll(past);
+        return finalResult;
     }
 
     public static ArrayList<Event> getSortedEvents() {
@@ -214,14 +247,7 @@ public class AppData {
             }
         }
 
-        filteredList.sort(new Comparator<Event>() {
-            @Override
-            public int compare(Event e1, Event e2) {
-                return Boolean.compare(e2.isPromoted(), e1.isPromoted());
-            }
-        });
-
-        return filteredList;
+        return getSorted(filteredList);
     }
 
     public static Event findByName(String name) {

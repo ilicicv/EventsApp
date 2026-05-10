@@ -71,6 +71,8 @@
     <string name="msg_vec_attending">Već ste na listi učesnika!</string>
     <string name="msg_uklonjeno_zainteresovani">Uklonjeno iz zainteresovanih.</string>
     <string name="msg_otkazano">Otkazano prisustvo.</string>
+    <string name="msg_prosao_dogadjaj">Ovaj događaj je završen i prijave nisu moguće.</string>
+    <string name="msg_nema_slobodnih">Nema više slobodnih mesta!</string>
 
     <string-array name="categories_array">
         <item>Party</item>
