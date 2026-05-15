@@ -14,12 +14,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     LinearLayout layoutStart, layoutLogin, layoutRegister;
     Button btnLogin, btnRegister, btnLoginForm, btnRegisterForm;
     EditText editUsername, editPassword, editUsernameReg, editPasswordReg, editEmailReg;
-
+    DatabaseHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        dbHelper = new DatabaseHelper(this);
 
         btnLogin = findViewById(R.id.btnLogin);
         btnRegister = findViewById(R.id.btnRegister);
@@ -55,10 +57,15 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             layoutStart.setVisibility(View.GONE);
         }
         else if (id == R.id.btnLoginForm) {
-            String user = editUsername.getText().toString();
-            String pass = editPassword.getText().toString();
+            String user = editUsername.getText().toString().trim();
+            String pass = editPassword.getText().toString().trim();
 
-            if (user.equals("admin") && pass.equals("admin")) {
+            if (user.isEmpty() || pass.isEmpty()) {
+                editUsername.setError(getString(R.string.errorLogin));
+                return;
+            }
+
+            if (dbHelper.loginUser(user, pass)) {
                 Intent intent = new Intent(this, EventsActivity.class);
                 Bundle login = new Bundle();
                 login.putString("username", user);
@@ -67,6 +74,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             } else {
                 editUsername.setError(getString(R.string.errorLogin));
             }
+
         }
         else if (id == R.id.btnRegisterForm) {
             String user = editUsernameReg.getText().toString();
@@ -75,13 +83,29 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
             if (user.isEmpty() || email.isEmpty() || pass.isEmpty()) {
                 editUsernameReg.setError(getString(R.string.errorRegister));
+            } else if (pass.length()<6){
+                editPassword.setError(getString(R.string.msg_pass));
             } else {
-                Intent intent = new Intent(this, EventsActivity.class);
-                Bundle register = new Bundle();
-                register.putString("username", user);
-                register.putString("email", email);
-                intent.putExtras(register);
-                startActivity(intent);
+                if (dbHelper.checkUsername(user)) {
+                    editUsernameReg.setError(getString(R.string.msg_user));
+                    return;
+                }
+
+                if (dbHelper.checkEmail(email)) {
+                    editEmailReg.setError(getString(R.string.msg_mail));
+                    return;
+                }
+
+                if (dbHelper.registerUser(user, email, pass)) {
+                    Intent intent = new Intent(this, EventsActivity.class);
+                    Bundle register = new Bundle();
+                    register.putString("username", user);
+                    register.putString("email", email);
+                    intent.putExtras(register);
+                    startActivity(intent);
+                } else {
+                    editUsernameReg.setError(getString(R.string.msg_dberror));
+                }
             }
         }
     }
