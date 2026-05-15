@@ -202,7 +202,7 @@ public class AppData {
             }
         }
 
-        SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 
         upcoming.sort(new Comparator<Event>() {
             @Override
