@@ -1,6 +1,8 @@
 package valentina.ilicic.eventsApp;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -14,10 +16,26 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
     private  TextView txtCapacity;
 
     private DatabaseHelper dbHelper;
+    private String currentUsername = "";
+    private int userId = -1;
+    private int eventId = -1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_details);
+
+        dbHelper = new DatabaseHelper(this);
+
+        Bundle loginData = getIntent().getExtras();
+        if (loginData != null) {
+            currentUsername = loginData.getString("username", "");
+        }
+
+        eventName = getIntent().getStringExtra("event_name");
+        userId = dbHelper.getUserIdByUsername(currentUsername);
+
+        Cursor eventCursor = dbHelper.getEventByName(eventName);
+        loadEventFromCursor(eventCursor);
 
         ImageView imgEvent = findViewById(R.id.imageEvents);
         TextView txtName = findViewById(R.id.txtName);
@@ -63,9 +81,40 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         btnAttending.setOnClickListener(this);
     }
 
+    private void loadEventFromCursor(Cursor cursor) {
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    eventId = cursor.getInt(cursor.getColumnIndexOrThrow(EventsTable.COL_ID));
+
+                    String naziv = cursor.getString(cursor.getColumnIndexOrThrow(EventsTable.COL_NAZIV));
+                    String opis = cursor.getString(cursor.getColumnIndexOrThrow(EventsTable.COL_OPIS));
+                    String lokacija = cursor.getString(cursor.getColumnIndexOrThrow(EventsTable.COL_LOKACIJA));
+                    String datumVreme = cursor.getString(cursor.getColumnIndexOrThrow(EventsTable.COL_DATUM_VREME));
+                    String kategorija = cursor.getString(cursor.getColumnIndexOrThrow(EventsTable.COL_KATEGORIJA));
+                    int promoted = cursor.getInt(cursor.getColumnIndexOrThrow(EventsTable.COL_PROMOTED));
+                    int kapacitet = cursor.getInt(cursor.getColumnIndexOrThrow(EventsTable.COL_KAPACITET));
+                    int prisutni = cursor.getInt(cursor.getColumnIndexOrThrow(EventsTable.COL_BR_PRISUTNIH));
+                    double prosecnaOcena = cursor.getDouble(cursor.getColumnIndexOrThrow(EventsTable.COL_AVG_RATING));
+                    int brojOcena = cursor.getInt(cursor.getColumnIndexOrThrow(EventsTable.COL_BR_OCENA));
+
+                    event = new Event(
+                            naziv, opis, lokacija, datumVreme, kategorija,
+                            android.R.drawable.ic_menu_gallery, promoted == 1,
+                            kapacitet, prisutni, prosecnaOcena, brojOcena
+                    );
+                }
+            } catch (Exception e) {
+                Toast.makeText(this, getString(R.string.msg_ucitavanje_eventa) + e.getMessage(), Toast.LENGTH_SHORT).show();
+            } finally {
+                cursor.close();
+            }
+        }
+    }
     @Override
     public void onClick(View view) {
-        if (event == null) return;
+
+        if (event == null || userId == -1 || eventId == -1) return;
 
         if (event.isPast()) {
             Toast.makeText(this, R.string.msg_prosao_dogadjaj, Toast.LENGTH_SHORT).show();
@@ -73,37 +122,50 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         }
         int id = view.getId();
 
+
         if (id == R.id.btnInterested) {
-            if (!AppData.interestedEvents.contains(event)) {
-                AppData.interestedEvents.add(event);
-                Toast.makeText(this, R.string.added_to_interested, Toast.LENGTH_SHORT).show();
+            String status = dbHelper.getStatus(userId, eventId);
+
+            if (status == null || !status.equalsIgnoreCase("ZAINTERESOVAN")) {
+
+                if (dbHelper.setInterested(userId, eventId)) {
+                    Toast.makeText(this, R.string.added_to_interested, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
+                }
             } else {
                 Toast.makeText(this, R.string.msg_vec_dodat, Toast.LENGTH_SHORT).show();
             }
 
+
         } else if (id == R.id.btnAttending) {
-            if (AppData.attendingEvents.contains(event)) {
+            String status = dbHelper.getStatus(userId, eventId);
+
+            if (status != null && status.equalsIgnoreCase("PRISUSTVUJEM")) {
                 Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            if (event.isPromoted()) {
-                int freeSeats = event.getCapacity() - event.getAttendingCount();
+            int res = dbHelper.setAttending(
+                    userId,
+                    eventId,
+                    event.isPromoted(),
+                    event.getCapacity(),
+                    event.getAttendingCount()
+            );
 
-                if (freeSeats > 0) {
+            if (res >= 0) {
+                Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
+
+                if (event.isPromoted()) {
                     event.setAttendingCount(event.getAttendingCount() + 1);
-
-                    AppData.attendingEvents.add(event);
-                    Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
-
                     int newFreeSeats = event.getCapacity() - event.getAttendingCount();
                     txtCapacity.setText(getString(R.string.slobodnih_mesta_x_y, newFreeSeats, event.getCapacity()));
-                } else {
-                    Toast.makeText(this, R.string.msg_nema_slobodnih, Toast.LENGTH_SHORT).show();
                 }
-            } else if (!AppData.attendingEvents.contains(event)) {
-                AppData.attendingEvents.add(event);
-                Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
+            } else if (res == -2) {
+                Toast.makeText(this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, R.string.msg_nema_slobodnih, Toast.LENGTH_SHORT).show();
             }
         }
     }

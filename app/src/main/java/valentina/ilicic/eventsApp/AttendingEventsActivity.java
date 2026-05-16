@@ -19,10 +19,22 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
     private LinearLayout layoutUpcoming, layoutPast;
     private EventAdapter adapterUpcoming, adapterPast;
 
+    private DatabaseHelper dbHelper;
+    private String currentUsername = "";
+    private int userId = -1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_attending_events);
+
+        dbHelper = new DatabaseHelper(this);
+
+        Bundle loginData = getIntent().getExtras();
+        if (loginData != null) {
+            currentUsername = loginData.getString("username", "");
+        }
+        userId = dbHelper.getUserIdByUsername(currentUsername);
 
         empty = findViewById(R.id.txtNoAttendingEvents);
         listUpcoming = findViewById(R.id.listUpcoming);
@@ -30,7 +42,23 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
         layoutUpcoming = findViewById(R.id.layoutUpcoming);
         layoutPast = findViewById(R.id.layoutPast);
 
-        ArrayList<Event> allEvents = AppData.attendingEvents;
+        adapterUpcoming = new EventAdapter(this, R.layout.list_row_attending);
+        adapterPast = new EventAdapter(this, R.layout.list_row_attending);
+
+        listUpcoming.setAdapter(adapterUpcoming);
+        listPast.setAdapter(adapterPast);
+
+        listUpcoming.setOnItemClickListener(this);
+        listUpcoming.setOnItemLongClickListener(this);
+        listPast.setOnItemClickListener(this);
+
+        loadData();
+    }
+
+    private void loadData() {
+        if (userId == -1) return;
+
+        ArrayList<Event> allEvents = dbHelper.getAttendingEvents(userId);
 
         if (allEvents == null || allEvents.isEmpty()) {
             empty.setVisibility(View.VISIBLE);
@@ -52,21 +80,14 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
 
             if (!upcoming.isEmpty()) {
                 layoutUpcoming.setVisibility(View.VISIBLE);
-                adapterUpcoming = new EventAdapter(this, R.layout.list_row_attending);
                 adapterUpcoming.setEvents(upcoming);
-                listUpcoming.setAdapter(adapterUpcoming);
-                listUpcoming.setOnItemClickListener(this);
-                listUpcoming.setOnItemLongClickListener(this);
             } else {
                 layoutUpcoming.setVisibility(View.GONE);
             }
 
             if (!past.isEmpty()) {
                 layoutPast.setVisibility(View.VISIBLE);
-                adapterPast = new EventAdapter(this, R.layout.list_row_attending);
                 adapterPast.setEvents(past);
-                listPast.setAdapter(adapterPast);
-                listPast.setOnItemClickListener(this);
             } else {
                 layoutPast.setVisibility(View.GONE);
             }
@@ -79,6 +100,7 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
         if (event != null) {
             Intent intent = new Intent(this, EventDetailsActivity.class);
             intent.putExtra("event_name", event.getName());
+            intent.putExtra("username", currentUsername);
             startActivity(intent);
         }
     }
@@ -87,32 +109,15 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
     public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
         Event event = (Event) adapterView.getItemAtPosition(i);
 
-        if (event != null) {
-            if (event.isPromoted() && event.getAttendingCount() > 0) {
-                event.setAttendingCount(event.getAttendingCount() - 1);
+        if (event != null && userId != -1) {
+            boolean deleted = dbHelper.removeAttending(userId, event.getName());
+
+            if (deleted) {
+                loadData();
+                Toast.makeText(this, R.string.msg_otkazano, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
             }
-
-            AppData.attendingEvents.remove(event);
-
-            ArrayList<Event> upcoming = new ArrayList<>();
-            for (Event e : AppData.attendingEvents) {
-                if (!e.isPast()) {
-                    upcoming.add(e);
-                }
-            }
-
-            if (adapterUpcoming != null) {
-                adapterUpcoming.setEvents(upcoming);
-                if (upcoming.isEmpty()) {
-                    layoutUpcoming.setVisibility(View.GONE);
-                }
-            }
-
-            if (AppData.attendingEvents.isEmpty()) {
-                empty.setVisibility(View.VISIBLE);
-            }
-
-            Toast.makeText(this, R.string.msg_otkazano, Toast.LENGTH_SHORT).show();
         }
         return true;
     }
@@ -120,8 +125,6 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
 
     protected  void onResume(){
         super.onResume();
-        if(adapterPast!=null){
-            adapterPast.notifyDataSetChanged();
-        }
+        loadData();
     }
 }

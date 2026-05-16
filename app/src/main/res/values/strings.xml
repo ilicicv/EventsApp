@@ -79,6 +79,7 @@
     <string name="msg_mail">Email address is already registered!</string>
     <string name="msg_dberror">Failed due to a database error.</string>
     <string name="msg_wrongCurrPass">Incorrect current password!</string>
+    <string name="msg_ucitavanje_eventa">\"Greška pri čitanju događaja: \"</string>
 
     <string-array name="categories_array">
         <item>Party</item>

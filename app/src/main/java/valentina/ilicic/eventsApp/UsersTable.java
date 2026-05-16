@@ -117,4 +117,26 @@ public class UsersTable implements DatabaseTable{
             return false;
         }
     }
+
+    public int getUserIdByUsername(SQLiteDatabase db, String username) {
+        Cursor cursor = null;
+        try {
+            cursor = db.query(
+                    TABLE_NAME,
+                    new String[]{COL_ID},
+                    COL_USERNAME + " = ?",
+                    new String[]{username},
+                    null, null, null
+            );
+
+            if (cursor != null && cursor.moveToFirst()) {
+                return cursor.getInt(cursor.getColumnIndexOrThrow(COL_ID));
+            }
+            return -1;
+        } catch (Exception e) {
+            return -1;
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+    }
 }

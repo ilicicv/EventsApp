@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -103,6 +104,15 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
         if (selectedEvent != null) {
             Intent intent = new Intent(getActivity(), EventDetailsActivity.class);
             intent.putExtra("event_name", selectedEvent.getName());
+
+            if (getActivity() != null) {
+                TextView txtUser = getActivity().findViewById(R.id.textUsername);
+                if (txtUser != null) {
+                    String trenutniUser = txtUser.getText().toString();
+                    intent.putExtra("username", trenutniUser);
+                }
+            }
+
             startActivity(intent);
         }
     }

@@ -33,6 +33,12 @@ public class MyEventsFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getActivity(), InterestedEventsActivity.class);
+
+                Bundle loginData = getActivity().getIntent().getExtras();
+                if (loginData != null) {
+                    intent.putExtras(loginData);
+                }
+
                 startActivity(intent);
             }
         });
@@ -41,6 +47,12 @@ public class MyEventsFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getActivity(), AttendingEventsActivity.class);
+
+                Bundle loginData = getActivity().getIntent().getExtras();
+                if (loginData != null) {
+                    intent.putExtras(loginData);
+                }
+
                 startActivity(intent);
             }
         });

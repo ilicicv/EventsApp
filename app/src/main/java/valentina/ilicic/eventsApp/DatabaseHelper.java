@@ -15,6 +15,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private Context context;
     private UsersTable usersTable;
     private EventsTable eventsTable;
+    private AttendanceTable attendanceTable;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -22,6 +23,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         this.usersTable = (UsersTable) DatabaseTableFactory.getUsersTable(context);
         this.eventsTable = (EventsTable) DatabaseTableFactory.getEventsTable(context);
+        this.attendanceTable = (AttendanceTable) DatabaseTableFactory.getAttendanceTable(context);
     }
 
     @Override
@@ -35,20 +37,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             EventsTable table = (EventsTable) eventsTableInstance;
 
-            // AUTOMATSKO PUNJENJE BAZE PODACIMA SA FORMATOM "dd.MM.yyyy HH:mm"
-
-            // 1. Prošli / Regularni događaji (promoted = 0, kapacitet = 0, prisutni = 0)
+            //Prošli / Regularni događaji
             insertInitialEvent(db, "Jakov Jozinović", "Koncert mlade muzičke senzacije.", "SPENS, Novi Sad", "10.11.2025 20:30", "Concert", 0, 0, 0);
             insertInitialEvent(db, "NEON Party", "Sjajan neon doživljaj uz najbolje DJ izvođače.", "Štark Arena, Beograd", "10.05.2026 22:00", "Party", 0, 0, 0);
             insertInitialEvent(db, "Predstava: Kir Janja", "Vrhunska izvedba večnog klasika Jovana Sterije Popovića na daskama teatra.", "Knjaževsko-srpski teatar, Kragujevac", "05.10.2025 20:00", "Stand-Up & Theater", 0, 0, 0);
             insertInitialEvent(db, "Jesenja izložba", "Godišnja izložba radova eminentnih likovnih umetnika Srbije.", "Galerija ULUS, Beograd", "20.09.2025 18:00", "Exhibition", 0, 0, 0);
 
-            // 2. Promovisani (Promoted) događaji (promoted = 1, kapacitet > 0, prisutni <= kapacitet)
+            //Promovisani događaji
             insertInitialEvent(db, "EXIT Festival", "Najveći muzički festival u regiji.", "Petrovaradin, Novi Sad", "10.07.2026 18:00", "Festival", 1, 50000, 1);
             insertInitialEvent(db, "BITEF pod zvezdama", "Svečano otvaranje prestižnog beogradskog pozorišnog festivala.", "Stari Bitef Teatar, Beograd", "20.06.2026 21:00", "Stand-Up & Theater", 1, 350, 1);
             insertInitialEvent(db, "Belgrade Beer Fest", "Ogromni letnji festival piva, druženja i muzike na beogradskom Ušću.", "Ušće, Beograd", "12.08.2026 17:00", "Festival", 1, 15000, 0);
 
-            // 3. Regularni aktuelni događaji (promoted = 0, kapacitet = 0, prisutni = 0)
+            //Regularni događaji
             insertInitialEvent(db, "Yu Grupa na Letnjoj", "Koncert legendarnog benda pod otvorenim nebom u Tvrđavi.", "Letnja pozornica, Niš", "18.05.2026 21:00", "Concert", 0, 0, 0);
             insertInitialEvent(db, "Party Barutana", "Letnja žurka svetski poznatih DJ-a na Kalemegdanu.", "Barutana, Beograd", "22.05.2026 23:00", "Party", 0, 0, 0);
             insertInitialEvent(db, "Beach Party Palić", "Provod na obali jezera uz najbolje letnje hitove.", "Ženski štrand, Palić", "15.07.2026 16:00", "Party", 0, 0, 0);
@@ -61,6 +61,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             insertInitialEvent(db, "Summer Foam Party", "Veliki popodnevni i večernji pena party na otvorenim bazenima.", "Gradski Bazeni, Kragujevac", "28.07.2026 19:00", "Party", 0, 0, 0);
             insertInitialEvent(db, "Retrospektiva slika MSUB", "Istorijska postavka i izložba slika jugoslovenskog modernizma.", "Muzej Savremene Umetnosti, Beograd", "15.05.2026 12:00", "Exhibition", 0, 0, 0);
         }
+
+        DatabaseTable attendanceTableInstance = DatabaseTableFactory.createTable("ATTENDANCE", context);
+        if (attendanceTableInstance != null) {
+            attendanceTableInstance.createTable(db);
+        }
+
     }
 
     private void insertInitialEvent(SQLiteDatabase db, String title, String description, String location,
@@ -87,6 +93,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         DatabaseTable eventsTable = DatabaseTableFactory.createTable("EVENTS", context);
         if (eventsTable != null) db.execSQL("DROP TABLE IF EXISTS " + eventsTable.getTableName());
+
+        DatabaseTable attendanceTable = DatabaseTableFactory.createTable("ATTENDANCE", context);
+        if (attendanceTable != null) db.execSQL("DROP TABLE IF EXISTS " + attendanceTable.getTableName());
 
         onCreate(db);
     }
@@ -158,19 +167,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // -------------------------------------------------------------------------------------------
-
-    public ArrayList<Event> getAllEventsList() {
+    public int getUserIdByUsername(String username) {
         SQLiteDatabase db = this.getReadableDatabase();
         try {
-            if (eventsTable != null) {
-                return eventsTable.getAllEventsList(db);
+            if (usersTable != null) {
+                return usersTable.getUserIdByUsername(db, username);
             }
-            return new ArrayList<>();
+            return -1;
         } finally {
             db.close();
         }
     }
+
+    // -------------------------------------------------------------------------------------------
 
     public boolean insertEvent(String title, String description, String location,
                                String dateTime, String category, int promoted, int capacity) {
@@ -209,11 +218,37 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return null;
     }
 
-    public boolean registerAttendance(int eventId) {
-        SQLiteDatabase db = this.getWritableDatabase();
+    public int getEventIdByName(String eventName) {
+        SQLiteDatabase db = this.getReadableDatabase();
         try {
             if (eventsTable != null) {
-                return eventsTable.registerAttendance(db, eventId);
+                return eventsTable.getEventIdByName(db, eventName);
+            }
+            return -1;
+        } finally {
+            db.close();
+        }
+    }
+
+    public ArrayList<Event> getAllEventsList() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try {
+            if (eventsTable != null) {
+                return eventsTable.getAllEventsList(db);
+            }
+            return new ArrayList<>();
+        } finally {
+            db.close();
+        }
+    }
+
+    // -------------------------------------------------------------------------------------------
+
+    public boolean setInterested(int userId, int eventId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            if (attendanceTable != null) {
+                return attendanceTable.addInterested(db, userId, eventId);
             }
             return false;
         } finally {
@@ -221,4 +256,75 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    public boolean removeInterested(int userId, String eventName) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            if (attendanceTable != null) {
+                return attendanceTable.removeInterested(db, userId, eventName);
+            }
+            return false;
+        } finally {
+            db.close();
+        }
+    }
+
+    public int setAttending(int userId, int eventId, boolean isPromoted, int kapacitet, int trenutnoPrisutnih) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            if (attendanceTable != null) {
+                return attendanceTable.addAttending(db, userId, eventId, isPromoted, kapacitet, trenutnoPrisutnih);
+            }
+            return -2;
+        } finally {
+            db.close();
+        }
+    }
+
+    public boolean removeAttending(int userId, String eventName) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            if (attendanceTable != null) {
+                return attendanceTable.removeAttending(db, userId, eventName);
+            }
+            return false;
+        } finally {
+            db.close();
+        }
+    }
+
+    public String getStatus(int userId, int eventId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try {
+            if (attendanceTable != null) {
+                return attendanceTable.getStatus(db, userId, eventId);
+            }
+            return null;
+        } finally {
+            db.close();
+        }
+    }
+
+    public ArrayList<Event> getInterestedEvents(int userId, String status) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try {
+            if (attendanceTable != null) {
+                return attendanceTable.getInterestedEvents(db, userId, status);
+            }
+            return new ArrayList<>();
+        } finally {
+            db.close();
+        }
+    }
+
+    public ArrayList<Event> getAttendingEvents(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try {
+            if (attendanceTable != null) {
+                return attendanceTable.getAttendingEvents(db, userId);
+            }
+            return new ArrayList<>();
+        } finally {
+            db.close();
+        }
+    }
 }

@@ -13,6 +13,7 @@ public class EventsActivity extends AppCompatActivity implements View.OnClickLis
     TextView textUsername;
     EventsFragment eventsFragm;
     MyEventsFragment myEventsFragm;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
