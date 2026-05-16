@@ -38,8 +38,8 @@ public class EventsActivity extends AppCompatActivity implements View.OnClickLis
         btnFriends.setOnClickListener(this);
 
         getSupportFragmentManager().beginTransaction()
-            .add(R.id.fragmentLayout, eventsFragm)
-            .commit();
+                .add(R.id.fragmentLayout, eventsFragm)
+                .commit();
     }
 
     @Override

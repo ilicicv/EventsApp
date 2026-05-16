@@ -11,8 +11,9 @@ import android.widget.Toast;
 public class EventDetailsActivity extends AppCompatActivity implements View.OnClickListener {
     private String eventName;
     private Event event;
-    TextView txtCapacity;
+    private  TextView txtCapacity;
 
+    private DatabaseHelper dbHelper;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

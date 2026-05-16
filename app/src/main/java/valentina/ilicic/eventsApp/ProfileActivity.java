@@ -12,6 +12,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
     TextView textUser, textEmail;
     Button btnPassProfile, btnEndSessionProfile;
+    String username = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,8 +31,12 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
             String user = loginData.getString("profileUsername");
             String email = loginData.getString("profileEmail");
 
-            if (user != null && email != null) {
+            if (user != null) {
                 textUser.setText(user);
+                username = user;
+            }
+
+            if (email != null) {
                 textEmail.setText(email);
             }
         }
@@ -49,6 +54,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         }
         else if (id == R.id.btnPassProfile) {
             Intent intent = new Intent(this, PasswordActivity.class);
+            intent.putExtra("username", username);
             startActivity(intent);
         }
     }

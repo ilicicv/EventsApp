@@ -12,21 +12,29 @@ public class PasswordActivity extends AppCompatActivity {
 
     EditText editCurrPass, editNewPass;
     Button btnSavePass;
+    String user;
+    DatabaseHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_password);
 
+        dbHelper = new DatabaseHelper(this);
+
         editCurrPass = findViewById(R.id.editCurrPass);
         editNewPass = findViewById(R.id.editNewPass);
         btnSavePass = findViewById(R.id.btnSavePass);
 
+        if (getIntent().getExtras() != null) {
+            user = getIntent().getExtras().getString("username");
+        }
+
         btnSavePass.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String oldPass = editCurrPass.getText().toString();
-                String newPass = editNewPass.getText().toString();
+                String oldPass = editCurrPass.getText().toString().trim();
+                String newPass = editNewPass.getText().toString().trim();
 
                 if (oldPass.isEmpty() || newPass.isEmpty()) {
                     editCurrPass.setError(getString(R.string.errorRegister));
@@ -38,8 +46,22 @@ public class PasswordActivity extends AppCompatActivity {
                     return;
                 }
 
-                Toast.makeText(PasswordActivity.this, getString(R.string.passwordChanged), Toast.LENGTH_SHORT).show();
-                finish();
+                if (newPass.length() < 6) {
+                    editNewPass.setError(getString(R.string.msg_pass));
+                    return;
+                }
+
+                if (!dbHelper.loginUser(user, oldPass)) {
+                    editCurrPass.setError(getString(R.string.msg_wrongCurrPass));
+                    return;
+                }
+
+                if(dbHelper.updatePassword(user, newPass)){
+                    Toast.makeText(PasswordActivity.this, getString(R.string.passwordChanged), Toast.LENGTH_SHORT).show();
+                    finish();
+                }else{
+                    Toast.makeText(PasswordActivity.this, getString(R.string.msg_dberror), Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }

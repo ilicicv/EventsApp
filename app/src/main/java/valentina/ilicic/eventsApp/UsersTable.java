@@ -85,9 +85,7 @@ public class UsersTable implements DatabaseTable{
             if (cursor != null && cursor.moveToFirst()) {
                 String storedHashedPassword = cursor.getString(0);
 
-                boolean isPasswordCorrect = PasswordHasher.verifyPassword(enteredPassword, storedHashedPassword);
-
-                if (isPasswordCorrect) {
+                if (PasswordHasher.verifyPassword(enteredPassword, storedHashedPassword)) {
                     return true;
                 } else {
                     return false;
@@ -110,9 +108,7 @@ public class UsersTable implements DatabaseTable{
             String newHashedPassword = PasswordHasher.hashPassword(newPlainPassword);
             values.put(COL_LOZINKA, newHashedPassword);
 
-            int rows = db.update(TABLE_NAME, values, COL_USERNAME + " = ?", new String[]{username});
-
-            if (rows > 0) {
+            if (db.update(TABLE_NAME, values, COL_USERNAME + " = ?", new String[]{username}) > 0) {
                 return true;
             } else {
                 return false;

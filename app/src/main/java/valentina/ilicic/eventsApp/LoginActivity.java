@@ -77,14 +77,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         }
         else if (id == R.id.btnRegisterForm) {
-            String user = editUsernameReg.getText().toString();
-            String pass = editPasswordReg.getText().toString();
-            String email = editEmailReg.getText().toString();
+            String user = editUsernameReg.getText().toString().trim();
+            String pass = editPasswordReg.getText().toString().trim();
+            String email = editEmailReg.getText().toString().trim();
 
             if (user.isEmpty() || email.isEmpty() || pass.isEmpty()) {
                 editUsernameReg.setError(getString(R.string.errorRegister));
             } else if (pass.length()<6){
-                editPassword.setError(getString(R.string.msg_pass));
+                editPasswordReg.setError(getString(R.string.msg_pass));
             } else {
                 if (dbHelper.checkUsername(user)) {
                     editUsernameReg.setError(getString(R.string.msg_user));

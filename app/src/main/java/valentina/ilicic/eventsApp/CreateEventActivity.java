@@ -17,10 +17,13 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
     private EditText editName, editDescription, editLocation, editDateTime, editCapacity;
     private Spinner spinnerCategory;
     private CheckBox cbPromoted;
+    private DatabaseHelper dbHelper;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_event);
+
+        dbHelper = new DatabaseHelper(this);
 
         editName = findViewById(R.id.editName);
         editDescription = findViewById(R.id.editDescription);
@@ -87,16 +90,14 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
                 }
             }
 
-            Event newEvent;
-            if (isPromoted) {
-                newEvent = EventFactory.createPromotedEvent(name, desc, loc, dt, category, imageResId, capacity);
-            } else {
-                newEvent = EventFactory.createRegularEvent(name, desc, loc, dt, category, imageResId);
-            }
+            int promotedValue = isPromoted ? 1 : 0;
 
-            AppData.allEvents.add(newEvent);
-            Toast.makeText(CreateEventActivity.this, R.string.msg_kreiran_dogadjaj, Toast.LENGTH_SHORT).show();
-            finish();
+            if (dbHelper.insertEvent(name,desc,loc,dt,category, promotedValue,capacity )) {
+                Toast.makeText(CreateEventActivity.this, R.string.msg_kreiran_dogadjaj, Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Toast.makeText(CreateEventActivity.this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
+            }
         }
     }
     private int getIconByCategory(String category) {

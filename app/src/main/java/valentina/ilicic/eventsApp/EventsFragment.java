@@ -16,6 +16,7 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
 
     private ListView list;
     private EventAdapter adapter;
+    private DatabaseHelper dbHelper;
 
     private Button btnAddEvent, btnFilterAll, btnFilterParty, btnFilterFestival, btnFilterTheater, btnFilterConcert, btnFilterExhibition;
 
@@ -26,12 +27,15 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_events, container, false);
+        dbHelper = new DatabaseHelper(getActivity());
 
         list = view.findViewById(R.id.listEvents);
         list.setEmptyView(view.findViewById(R.id.txtNoEvents));
 
         adapter = new EventAdapter(getActivity());
-        adapter.setEvents(AppData.getSortedEvents());
+
+        ArrayList<Event> allEventsFromDb = dbHelper.getAllEventsList();
+        adapter.setEvents(AppData.getSorted(allEventsFromDb));
         list.setAdapter(adapter);
 
         btnAddEvent = view.findViewById(R.id.btnAddEvent);
@@ -76,11 +80,18 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
             b.setBackgroundColor(getContext().getColor(R.color.purple_500));
 
             String category = b.getText().toString();
-            if (category.equalsIgnoreCase(getString(R.string.sve))) {
-                adapter.setEvents(AppData.getSortedEvents());
+            ArrayList<Event> dbEvents = dbHelper.getAllEventsList();
+
+            if (category.equalsIgnoreCase(getString(R.string.sve)) || category.equalsIgnoreCase("Sve")) {
+                adapter.setEvents(AppData.getSorted(dbEvents));
             } else {
-                ArrayList<Event> events = AppData.getSortedEventsByCategory(category);
-                adapter.setEvents(events);
+                ArrayList<Event> filteredEvents = new ArrayList<>();
+                for (Event event : dbEvents) {
+                    if (event.getCategory().equalsIgnoreCase(category)) {
+                        filteredEvents.add(event);
+                    }
+                }
+                adapter.setEvents(AppData.getSorted(filteredEvents));
             }
         }
     }
@@ -99,12 +110,9 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
     @Override
     public void onResume() {
         super.onResume();
-
-        ArrayList<Event> updatedList = AppData.getSortedEvents();
-
-        if (adapter != null) {
-            adapter.setEvents(updatedList);
-            adapter.notifyDataSetChanged();
+        if (dbHelper != null && adapter != null) {
+            ArrayList<Event> refreshedList = dbHelper.getAllEventsList();
+            adapter.setEvents(AppData.getSorted(refreshedList));
         }
     }
 
