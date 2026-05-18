@@ -1,8 +1,6 @@
 package valentina.ilicic.eventsApp;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -13,14 +11,15 @@ import android.widget.Toast;
 public class EventDetailsActivity extends AppCompatActivity implements View.OnClickListener {
     private String eventName;
     private Event event;
-    private  TextView txtCapacity;
+    private TextView txtCapacity;
 
     private DatabaseHelper dbHelper;
-    private String currentUsername = "";
+    private String currentUser = "";
     private int userId = -1;
     private int eventId = -1;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_details);
 
@@ -28,14 +27,13 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
 
         Bundle loginData = getIntent().getExtras();
         if (loginData != null) {
-            currentUsername = loginData.getString("username", "");
+            currentUser = loginData.getString("username", "");
         }
 
         eventName = getIntent().getStringExtra("event_name");
-        userId = dbHelper.getUserIdByUsername(currentUsername);
-
-        Cursor eventCursor = dbHelper.getEventByName(eventName);
-        loadEventFromCursor(eventCursor);
+        userId = dbHelper.getUserIdByUsername(currentUser);
+        event = dbHelper.getEventByName(eventName);
+        eventId = dbHelper.getEventId(eventName);
 
         ImageView imgEvent = findViewById(R.id.imageEvents);
         TextView txtName = findViewById(R.id.txtName);
@@ -47,9 +45,6 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         TextView txtRating = findViewById(R.id.txtRating);
         Button btnInterested = findViewById(R.id.btnInterested);
         Button btnAttending = findViewById(R.id.btnAttending);
-
-        eventName = getIntent().getStringExtra("event_name");
-        event = AppData.findByName(eventName);
 
         if (event != null) {
             txtName.setText(event.getName());
@@ -81,91 +76,56 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         btnAttending.setOnClickListener(this);
     }
 
-    private void loadEventFromCursor(Cursor cursor) {
-        if (cursor != null) {
-            try {
-                if (cursor.moveToFirst()) {
-                    eventId = cursor.getInt(cursor.getColumnIndexOrThrow(EventsTable.COL_ID));
-
-                    String naziv = cursor.getString(cursor.getColumnIndexOrThrow(EventsTable.COL_NAZIV));
-                    String opis = cursor.getString(cursor.getColumnIndexOrThrow(EventsTable.COL_OPIS));
-                    String lokacija = cursor.getString(cursor.getColumnIndexOrThrow(EventsTable.COL_LOKACIJA));
-                    String datumVreme = cursor.getString(cursor.getColumnIndexOrThrow(EventsTable.COL_DATUM_VREME));
-                    String kategorija = cursor.getString(cursor.getColumnIndexOrThrow(EventsTable.COL_KATEGORIJA));
-                    int promoted = cursor.getInt(cursor.getColumnIndexOrThrow(EventsTable.COL_PROMOTED));
-                    int kapacitet = cursor.getInt(cursor.getColumnIndexOrThrow(EventsTable.COL_KAPACITET));
-                    int prisutni = cursor.getInt(cursor.getColumnIndexOrThrow(EventsTable.COL_BR_PRISUTNIH));
-                    double prosecnaOcena = cursor.getDouble(cursor.getColumnIndexOrThrow(EventsTable.COL_AVG_RATING));
-                    int brojOcena = cursor.getInt(cursor.getColumnIndexOrThrow(EventsTable.COL_BR_OCENA));
-
-                    event = new Event(
-                            naziv, opis, lokacija, datumVreme, kategorija,
-                            android.R.drawable.ic_menu_gallery, promoted == 1,
-                            kapacitet, prisutni, prosecnaOcena, brojOcena
-                    );
-                }
-            } catch (Exception e) {
-                Toast.makeText(this, getString(R.string.msg_ucitavanje_eventa) + e.getMessage(), Toast.LENGTH_SHORT).show();
-            } finally {
-                cursor.close();
-            }
-        }
-    }
     @Override
     public void onClick(View view) {
-
         if (event == null || userId == -1 || eventId == -1) return;
 
-        if (event.isPast()) {
-            Toast.makeText(this, R.string.msg_prosao_dogadjaj, Toast.LENGTH_SHORT).show();
-            return;
-        }
+//        if (event.isPast()) {
+//            Toast.makeText(this, R.string.msg_prosao_dogadjaj, Toast.LENGTH_SHORT).show();
+//            return;
+//        }
         int id = view.getId();
 
-
         if (id == R.id.btnInterested) {
-            String status = dbHelper.getStatus(userId, eventId);
+            int resInterested = dbHelper.setInterested(userId, eventId);
 
-            if (status == null || !status.equalsIgnoreCase("ZAINTERESOVAN")) {
-
-                if (dbHelper.setInterested(userId, eventId)) {
+            switch (resInterested) {
+                case 1:
                     Toast.makeText(this, R.string.added_to_interested, Toast.LENGTH_SHORT).show();
-                } else {
+                    break;
+                case 0:
+                    Toast.makeText(this, R.string.msg_vec_dodat, Toast.LENGTH_SHORT).show();
+                    break;
+                case -1:
+                    Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
+                    break;
+                default:
                     Toast.makeText(this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(this, R.string.msg_vec_dodat, Toast.LENGTH_SHORT).show();
+                    break;
             }
-
 
         } else if (id == R.id.btnAttending) {
-            String status = dbHelper.getStatus(userId, eventId);
+            int resAttending = dbHelper.setAttending(userId, eventId, event.isPromoted(), event.getCapacity(), event.getAttendingCount());
 
-            if (status != null && status.equalsIgnoreCase("PRISUSTVUJEM")) {
-                Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
-                return;
-            }
+            switch (resAttending) {
+                case 1:
+                    Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
 
-            int res = dbHelper.setAttending(
-                    userId,
-                    eventId,
-                    event.isPromoted(),
-                    event.getCapacity(),
-                    event.getAttendingCount()
-            );
-
-            if (res >= 0) {
-                Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
-
-                if (event.isPromoted()) {
-                    event.setAttendingCount(event.getAttendingCount() + 1);
-                    int newFreeSeats = event.getCapacity() - event.getAttendingCount();
-                    txtCapacity.setText(getString(R.string.slobodnih_mesta_x_y, newFreeSeats, event.getCapacity()));
-                }
-            } else if (res == -2) {
-                Toast.makeText(this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, R.string.msg_nema_slobodnih, Toast.LENGTH_SHORT).show();
+                    if (event.isPromoted()) {
+                        event.setAttendingCount(event.getAttendingCount() + 1);
+                        int newFreeSeats = event.getCapacity() - event.getAttendingCount();
+                        txtCapacity.setText(getString(R.string.slobodnih_mesta_x_y, newFreeSeats, event.getCapacity()));
+                    }
+                    break;
+                case 0:
+                    Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
+                    break;
+                case -1:
+                    Toast.makeText(this, R.string.msg_nema_slobodnih, Toast.LENGTH_SHORT).show();
+                    break;
+                default:
+                    Toast.makeText(this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
+                    break;
             }
         }
     }

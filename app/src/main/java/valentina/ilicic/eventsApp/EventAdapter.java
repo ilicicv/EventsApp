@@ -17,17 +17,39 @@ public class EventAdapter extends BaseAdapter {
     private Context context;
     private ArrayList<Event> events;
     private int layoutId;
+    private DatabaseHelper dbHelper;
+    private String currentUser = "";
+    private int userId = -1;
 
     public EventAdapter(Context context) {
         this.context = context;
         this.events = new ArrayList<>();
         this.layoutId = R.layout.list_row;
+        this.dbHelper = new DatabaseHelper(context);
     }
 
     public EventAdapter(Context context, int layoutId) {
         this.context = context;
         this.events = new ArrayList<>();
         this.layoutId = layoutId;
+        this.dbHelper = new DatabaseHelper(context);
+    }
+
+    public EventAdapter(Context context, int layoutId, String currentUser) {
+        this.context = context;
+        this.events = new ArrayList<>();
+        this.layoutId = layoutId;
+        this.currentUser = currentUser;
+        this.dbHelper = new DatabaseHelper(context);
+        this.userId = dbHelper.getUserIdByUsername(currentUser);
+    }
+
+    public void setUsername(String username) {
+        this.currentUser = username;
+        if (dbHelper != null) {
+            this.userId = dbHelper.getUserIdByUsername(username);
+        }
+        notifyDataSetChanged();
     }
 
     public void setEvents(ArrayList<Event> eventsList) {
@@ -114,22 +136,31 @@ public class EventAdapter extends BaseAdapter {
                 if (currentEvent.isPast()) {
                     vh.btnRate.setVisibility(View.VISIBLE);
 
-                    if (!AppData.ratedEvents.contains(currentEvent.getName())) {
+                    int eventId = dbHelper.getEventId(currentEvent.getName());
+                    boolean rated = false;
+                    if (userId != -1 && eventId != -1) {
+                        rated = dbHelper.eventRated(userId, eventId);
+                    }
+
+                    if (!rated) {
                         vh.btnRate.setEnabled(true);
                         vh.btnRate.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 Intent intent = new Intent(context, RatingActivity.class);
                                 intent.putExtra("event_name", currentEvent.getName());
+                                intent.putExtra("username", currentUser);
                                 context.startActivity(intent);
                             }
                         });
                     } else {
                         vh.btnRate.setEnabled(false);
+                        vh.btnRate.setOnClickListener(null);
                     }
 
                 } else {
                     vh.btnRate.setVisibility(View.GONE);
+                    vh.btnRate.setOnClickListener(null);
                 }
             }
         }

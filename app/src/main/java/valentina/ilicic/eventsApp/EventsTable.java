@@ -5,9 +5,15 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Locale;
 
-public class EventsTable implements DatabaseTable{
+public class EventsTable implements DatabaseTable {
 
     public static final String TABLE_NAME = "events";
 
@@ -70,107 +76,143 @@ public class EventsTable implements DatabaseTable{
 
             return db.insert(TABLE_NAME, null, values) != -1;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
-        }
-    }
-
-    public Cursor getAllEvents(SQLiteDatabase db) {
-        return db.query(TABLE_NAME, null, null, null, null, null, COL_DATUM_VREME + " ASC");
-    }
-
-    public Cursor getAllCategories(SQLiteDatabase db) {
-        return db.query(true, TABLE_NAME, new String[]{COL_KATEGORIJA},
-                null, null, null, null, COL_KATEGORIJA + " ASC", null);
-    }
-
-    public Cursor getEventsByCategory(SQLiteDatabase db, String kategorija) {
-        return db.query(TABLE_NAME, null, COL_KATEGORIJA + " = ?",
-                new String[]{kategorija}, null, null, COL_DATUM_VREME + " ASC");
-    }
-
-    public Cursor getEventByName(SQLiteDatabase db, String eventName) {
-        return db.query(TABLE_NAME, null, COL_NAZIV + " = ?",
-                new String[]{eventName}, null, null, null);
-    }
-
-    public int getEventIdByName(SQLiteDatabase db, String eventName) {
-        Cursor cursor = null;
-        try {
-            cursor = db.query(
-                    TABLE_NAME,
-                    new String[]{COL_ID},
-                    COL_NAZIV + " = ?",
-                    new String[]{eventName},
-                    null, null, null
-            );
-
-            if (cursor != null && cursor.moveToFirst()) {
-                return cursor.getInt(0);
-            }
-            return -1;
-        } catch (Exception e) {
-            return -1;
-        } finally {
-            if (cursor != null) cursor.close();
-        }
-    }
-
-    public boolean registerAttendance(SQLiteDatabase db, int eventId) {
-        Cursor cursor = null;
-        try {
-            cursor = db.query(TABLE_NAME, new String[]{COL_KAPACITET, COL_BR_PRISUTNIH},
-                    COL_ID + " = ?", new String[]{String.valueOf(eventId)}, null, null, null);
-
-            if (cursor != null && cursor.moveToFirst()) {
-                int kapacitet = cursor.getInt(0);
-                int prisutni = cursor.getInt(1);
-
-                if (prisutni < kapacitet) {
-                    ContentValues values = new ContentValues();
-                    values.put(COL_BR_PRISUTNIH, prisutni + 1);
-
-                    int rows = db.update(TABLE_NAME, values, COL_ID + " = ?", new String[]{String.valueOf(eventId)});
-                    return rows > 0;
-                }
-            }
-            return false;
-        } catch (Exception e) {
-            return false;
-        } finally {
-            if (cursor != null) cursor.close();
         }
     }
 
     public ArrayList<Event> getAllEventsList(SQLiteDatabase db) {
         ArrayList<Event> eventList = new ArrayList<>();
-        Cursor cursor = getAllEvents(db);
+        String orderBy = COL_PROMOTED + " DESC, " + COL_DATUM_VREME + " ASC";
+        Cursor cursor = null;
 
-        if (cursor != null) {
-            try {
-                while (cursor.moveToNext()) {
-                    String naziv = cursor.getString(cursor.getColumnIndexOrThrow(COL_NAZIV));
-                    String opis = cursor.getString(cursor.getColumnIndexOrThrow(COL_OPIS));
-                    String lokacija = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOKACIJA));
-                    String datumVreme = cursor.getString(cursor.getColumnIndexOrThrow(COL_DATUM_VREME));
-                    String kategorija = cursor.getString(cursor.getColumnIndexOrThrow(COL_KATEGORIJA));
-                    int promoted = cursor.getInt(cursor.getColumnIndexOrThrow(COL_PROMOTED));
-                    int kapacitet = cursor.getInt(cursor.getColumnIndexOrThrow(COL_KAPACITET));
-                    int prisutni = cursor.getInt(cursor.getColumnIndexOrThrow(COL_BR_PRISUTNIH));
-
-                    double prosecnaOcena = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_AVG_RATING));
-                    int brojOcena = cursor.getInt(cursor.getColumnIndexOrThrow(COL_BR_OCENA));
-
-                    Event event = new Event(
-                            naziv, opis, lokacija, datumVreme, kategorija,
-                            android.R.drawable.ic_menu_gallery, promoted == 1,
-                            kapacitet, prisutni, prosecnaOcena, brojOcena
-                    );
-                    eventList.add(event);
-                }
-            } finally {
-                cursor.close();
+        try {
+            cursor = db.query(TABLE_NAME, null, null, null, null, null, orderBy);
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    eventList.add(mapCursorToEvent(cursor));
+                } while (cursor.moveToNext());
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) cursor.close();
         }
+        sortEventsByPromotedAndDate(eventList);
         return eventList;
+    }
+
+    public ArrayList<Event> getEventsByCategoryList(SQLiteDatabase db, String category) {
+        ArrayList<Event> eventList = new ArrayList<>();
+        String selection = COL_KATEGORIJA + " = ?";
+        String[] selectionArgs = new String[]{category};
+        String orderBy = COL_PROMOTED + " DESC, " + COL_DATUM_VREME + " ASC";
+        Cursor cursor = null;
+
+        try {
+            cursor = db.query(TABLE_NAME, null, selection, selectionArgs, null, null, orderBy);
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    eventList.add(mapCursorToEvent(cursor));
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        sortEventsByPromotedAndDate(eventList);
+        return eventList;
+    }
+
+    public Event getEventByName(SQLiteDatabase db, String eventName) {
+        Cursor cursor = null;
+        try {
+            cursor = db.query(TABLE_NAME, null, COL_NAZIV + " = ?", new String[]{eventName}, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                return mapCursorToEvent(cursor);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return null;
+    }
+
+    public int getEventId(SQLiteDatabase db, String eventName) {
+        Cursor cursor = null;
+        try {
+            cursor = db.query(TABLE_NAME, new String[]{COL_ID}, COL_NAZIV + " = ?", new String[]{eventName}, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                return cursor.getInt(0);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return -1;
+    }
+
+    private Event mapCursorToEvent(Cursor cursor) {
+        String naziv = cursor.getString(cursor.getColumnIndexOrThrow(COL_NAZIV));
+        String opis = cursor.getString(cursor.getColumnIndexOrThrow(COL_OPIS));
+        String lokacija = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOKACIJA));
+        String datumVreme = cursor.getString(cursor.getColumnIndexOrThrow(COL_DATUM_VREME));
+        String kategorija = cursor.getString(cursor.getColumnIndexOrThrow(COL_KATEGORIJA));
+        int promoted = cursor.getInt(cursor.getColumnIndexOrThrow(COL_PROMOTED));
+        int kapacitet = cursor.getInt(cursor.getColumnIndexOrThrow(COL_KAPACITET));
+        int prisutni = cursor.getInt(cursor.getColumnIndexOrThrow(COL_BR_PRISUTNIH));
+        double prosecnaOcena = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_AVG_RATING));
+        int brojOcena = cursor.getInt(cursor.getColumnIndexOrThrow(COL_BR_OCENA));
+
+        if (promoted == 1) {
+            return EventFactory.createPromotedFromDb(
+                    naziv, opis, lokacija, datumVreme, kategorija,
+                    kapacitet, prisutni, prosecnaOcena, brojOcena
+            );
+        } else {
+            return EventFactory.createRegularFromDb(
+                    naziv, opis, lokacija, datumVreme, kategorija,
+                    prisutni, prosecnaOcena, brojOcena
+            );
+        }
+    }
+
+    public static void sortEventsByPromotedAndDate(ArrayList<Event> list) {
+        if (list == null || list.size() <= 1) return;
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
+
+        Collections.sort(list, new Comparator<Event>() {
+            @Override
+            public int compare(Event e1, Event e2) {
+                boolean past1 = e1.isPast();
+                boolean past2 = e2.isPast();
+
+                if (past1 != past2) {
+                    return past1 ? 1 : -1;
+                }
+
+                int p1 = e1.isPromoted() ? 1 : 0;
+                int p2 = e2.isPromoted() ? 1 : 0;
+
+                if (p1 != p2) {
+                    return Integer.compare(p2, p1);
+                }
+
+                try {
+                    Date d1 = sdf.parse(e1.getDateTime());
+                    Date d2 = sdf.parse(e2.getDateTime());
+                    if (d1 != null && d2 != null) {
+                        return d1.compareTo(d2);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return 0;
+            }
+        });
     }
 }

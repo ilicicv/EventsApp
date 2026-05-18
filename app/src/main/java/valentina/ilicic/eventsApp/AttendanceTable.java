@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
 
-public class AttendanceTable implements DatabaseTable{
+public class AttendanceTable implements DatabaseTable {
     public static final String TABLE_NAME = "attendance";
 
     public static final String COL_ID = "id";
@@ -34,12 +34,13 @@ public class AttendanceTable implements DatabaseTable{
                 "FOREIGN KEY(" + COL_EVENT_ID + ") REFERENCES events(id)" +
                 ")");
     }
+
     @Override
     public String getTableName() {
         return TABLE_NAME;
     }
 
-    public String getStatus(SQLiteDatabase db, int userId, int eventId) {
+    public String getAttendanceStatus(SQLiteDatabase db, int userId, int eventId) {
         Cursor cursor = null;
         try {
             cursor = db.query(TABLE_NAME,
@@ -49,7 +50,7 @@ public class AttendanceTable implements DatabaseTable{
                     null, null, null);
 
             if (cursor != null && cursor.moveToFirst()) {
-                 return cursor.getString(0);
+                return cursor.getString(0);
             }
             return null;
         } catch (Exception e) {
@@ -59,24 +60,31 @@ public class AttendanceTable implements DatabaseTable{
         }
     }
 
-    public boolean addInterested(SQLiteDatabase db, int userId, int eventId) {
+    public int setInterested(SQLiteDatabase db, int userId, int eventId) {
         try {
-            String trenutniStatus = getStatus(db, userId, eventId);
+            String status = getAttendanceStatus(db, userId, eventId);
 
-            if (trenutniStatus == null) {
+            if ("ZAINTERESOVAN".equals(status)) {
+                return 0;
+            }
+            if ("PRISUSTVUJE".equals(status)) {
+                return -1;
+            }
+
+            if (status == null) {
                 ContentValues values = new ContentValues();
                 values.put(COL_USER_ID, userId);
                 values.put(COL_EVENT_ID, eventId);
                 values.put(COL_PRISUSTVO, "ZAINTERESOVAN");
 
-                return db.insert(TABLE_NAME, null, values) != -1;
+                return db.insert(TABLE_NAME, null, values) != -1 ? 1 : -2;
             }
-
-            return false;
+            return -2;
         } catch (Exception e) {
-            return false;
+            return -2;
         }
     }
+
     public boolean removeInterested(SQLiteDatabase db, int userId, String eventName) {
         try {
             int rows = db.delete(TABLE_NAME,
@@ -89,46 +97,40 @@ public class AttendanceTable implements DatabaseTable{
         }
     }
 
-    public int addAttending(SQLiteDatabase db, int userId, int eventId, boolean isPromoted, int kapacitet, int trenutnoPrisutnih) {
+    public int setAttending(SQLiteDatabase db, int userId, int eventId, boolean isPromoted, int kapacitet, int trenutnoPrisutnih) {
         try {
-            String trenutniStatus = getStatus(db, userId, eventId);
+            String trenutniStatus = getAttendanceStatus(db, userId, eventId);
 
             if ("PRISUSTVUJE".equals(trenutniStatus)) {
-                return 0; // Već je prijavljen
+                return 0;
             }
-
             if (isPromoted && (kapacitet - trenutnoPrisutnih) <= 0) {
-                return -1; // nema slobodnih mesta
+                return -1;
             }
 
             if ("ZAINTERESOVAN".equals(trenutniStatus)) {
                 ContentValues values = new ContentValues();
                 values.put(COL_PRISUSTVO, "PRISUSTVUJE");
-
-                int rowsUpdated = db.update(TABLE_NAME, values,
-                        COL_USER_ID + "=? AND " + COL_EVENT_ID + "=?",
-                        new String[]{String.valueOf(userId), String.valueOf(eventId)});
-
+                int rowsUpdated = db.update(TABLE_NAME, values, COL_USER_ID + "=? AND " +
+                        COL_EVENT_ID + "=?", new String[]{String.valueOf(userId), String.valueOf(eventId)});
                 if (rowsUpdated > 0) {
                     db.execSQL("UPDATE events SET brojPrisutnih = brojPrisutnih + 1 WHERE id = ?", new Object[]{eventId});
-                    return 1; // zainteresovan na prisustvuje
+                    return 1;
                 }
-            } else {
+            } else if (trenutniStatus == null) {
                 ContentValues values = new ContentValues();
                 values.put(COL_USER_ID, userId);
                 values.put(COL_EVENT_ID, eventId);
                 values.put(COL_PRISUSTVO, "PRISUSTVUJE");
-
                 long id = db.insert(TABLE_NAME, null, values);
                 if (id != -1) {
                     db.execSQL("UPDATE events SET brojPrisutnih = brojPrisutnih + 1 WHERE id = ?", new Object[]{eventId});
-                    return 1; // prva prijava na događaj
+                    return 1;
                 }
             }
-
-            return -2; // update ili insert greska
+            return -2;
         } catch (Exception e) {
-            return -2; // greska sa bazom
+            return -2;
         }
     }
 
@@ -149,7 +151,6 @@ public class AttendanceTable implements DatabaseTable{
         }
     }
 
-
     public ArrayList<Event> getInterestedEvents(SQLiteDatabase db, int userId, String status) {
         ArrayList<Event> list = new ArrayList<>();
         Cursor cursor = null;
@@ -162,27 +163,11 @@ public class AttendanceTable implements DatabaseTable{
 
             if (cursor != null && cursor.moveToFirst()) {
                 do {
-                    String naziv = cursor.getString(cursor.getColumnIndexOrThrow("naziv"));
-                    String opis = cursor.getString(cursor.getColumnIndexOrThrow("opis"));
-                    String lokacija = cursor.getString(cursor.getColumnIndexOrThrow("lokacija"));
-                    String datumVreme = cursor.getString(cursor.getColumnIndexOrThrow("datumVreme"));
-                    String kategorija = cursor.getString(cursor.getColumnIndexOrThrow("kategorija"));
-                    int promoted = cursor.getInt(cursor.getColumnIndexOrThrow("promoted"));
-                    int kapacitet = cursor.getInt(cursor.getColumnIndexOrThrow("kapacitet"));
-                    int prisutni = cursor.getInt(cursor.getColumnIndexOrThrow("brojPrisutnih"));
-                    double prosecnaOcena = cursor.getDouble(cursor.getColumnIndexOrThrow("prosecnaOcena"));
-                    int brojOcena = cursor.getInt(cursor.getColumnIndexOrThrow("brojOcena"));
-
-                    Event event = new Event(
-                            naziv, opis, lokacija, datumVreme, kategorija,
-                            android.R.drawable.ic_menu_gallery, promoted == 1,
-                            kapacitet, prisutni, prosecnaOcena, brojOcena
-                    );
-
-                    list.add(event);
+                    list.add(mapCursorToEvent(cursor));
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
+            android.util.Log.e("DB_ERROR", "Greska u getInterestedEvents: ", e);
         } finally {
             if (cursor != null) cursor.close();
         }
@@ -201,31 +186,39 @@ public class AttendanceTable implements DatabaseTable{
 
             if (cursor != null && cursor.moveToFirst()) {
                 do {
-                    String naziv = cursor.getString(cursor.getColumnIndexOrThrow("naziv"));
-                    String opis = cursor.getString(cursor.getColumnIndexOrThrow("opis"));
-                    String lokacija = cursor.getString(cursor.getColumnIndexOrThrow("lokacija"));
-                    String datumVreme = cursor.getString(cursor.getColumnIndexOrThrow("datumVreme"));
-                    String kategorija = cursor.getString(cursor.getColumnIndexOrThrow("kategorija"));
-                    int promoted = cursor.getInt(cursor.getColumnIndexOrThrow("promoted"));
-                    int kapacitet = cursor.getInt(cursor.getColumnIndexOrThrow("kapacitet"));
-                    int prisutni = cursor.getInt(cursor.getColumnIndexOrThrow("brojPrisutnih"));
-                    double prosecnaOcena = cursor.getDouble(cursor.getColumnIndexOrThrow("prosecnaOcena"));
-                    int brojOcena = cursor.getInt(cursor.getColumnIndexOrThrow("brojOcena"));
-
-                    Event event = new Event(
-                            naziv, opis, lokacija, datumVreme, kategorija,
-                            android.R.drawable.ic_menu_gallery, promoted == 1,
-                            kapacitet, prisutni, prosecnaOcena, brojOcena
-                    );
-
-                    list.add(event);
+                    list.add(mapCursorToEvent(cursor));
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
+            android.util.Log.e("DB_ERROR", "Greska u getAttendingEvents: ", e);
         } finally {
             if (cursor != null) cursor.close();
         }
         return list;
     }
 
+    private Event mapCursorToEvent(Cursor cursor) {
+        String naziv = cursor.getString(cursor.getColumnIndexOrThrow("naziv"));
+        String opis = cursor.getString(cursor.getColumnIndexOrThrow("opis"));
+        String lokacija = cursor.getString(cursor.getColumnIndexOrThrow("lokacija"));
+        String datumVreme = cursor.getString(cursor.getColumnIndexOrThrow("datumVreme"));
+        String kategorija = cursor.getString(cursor.getColumnIndexOrThrow("kategorija"));
+        int promoted = cursor.getInt(cursor.getColumnIndexOrThrow("promoted"));
+        int kapacitet = cursor.getInt(cursor.getColumnIndexOrThrow("kapacitet"));
+        int prisutni = cursor.getInt(cursor.getColumnIndexOrThrow("brojPrisutnih"));
+        double prosecnaOcena = cursor.getDouble(cursor.getColumnIndexOrThrow("prosecnaOcena"));
+        int brojOcena = cursor.getInt(cursor.getColumnIndexOrThrow("brojOcena"));
+
+        if (promoted == 1) {
+            return EventFactory.createPromotedFromDb(
+                    naziv, opis, lokacija, datumVreme, kategorija,
+                    kapacitet, prisutni, prosecnaOcena, brojOcena
+            );
+        } else {
+            return EventFactory.createRegularFromDb(
+                    naziv, opis, lokacija, datumVreme, kategorija,
+                    prisutni, prosecnaOcena, brojOcena
+            );
+        }
+    }
 }

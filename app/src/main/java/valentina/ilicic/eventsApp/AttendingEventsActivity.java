@@ -42,8 +42,8 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
         layoutUpcoming = findViewById(R.id.layoutUpcoming);
         layoutPast = findViewById(R.id.layoutPast);
 
-        adapterUpcoming = new EventAdapter(this, R.layout.list_row_attending);
-        adapterPast = new EventAdapter(this, R.layout.list_row_attending);
+        adapterUpcoming = new EventAdapter(this, R.layout.list_row_attending, currentUsername);
+        adapterPast = new EventAdapter(this, R.layout.list_row_attending, currentUsername);
 
         listUpcoming.setAdapter(adapterUpcoming);
         listPast.setAdapter(adapterPast);
@@ -64,6 +64,9 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
             empty.setVisibility(View.VISIBLE);
             layoutUpcoming.setVisibility(View.GONE);
             layoutPast.setVisibility(View.GONE);
+
+            adapterUpcoming.setEvents(new ArrayList<>());
+            adapterPast.setEvents(new ArrayList<>());
         } else {
             empty.setVisibility(View.GONE);
 
@@ -83,6 +86,7 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
                 adapterUpcoming.setEvents(upcoming);
             } else {
                 layoutUpcoming.setVisibility(View.GONE);
+                adapterUpcoming.setEvents(new ArrayList<>());
             }
 
             if (!past.isEmpty()) {
@@ -90,6 +94,7 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
                 adapterPast.setEvents(past);
             } else {
                 layoutPast.setVisibility(View.GONE);
+                adapterPast.setEvents(new ArrayList<>());
             }
         }
     }

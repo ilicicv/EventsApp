@@ -14,12 +14,28 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
     private String eventName;
     private int selected = 0;
     private ImageButton[] stars = new ImageButton[5];
+    private DatabaseHelper dbHelper;
+    private String currentUser = "";
+    private int userId = -1;
+    private int eventId = -1;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rating);
+
+        dbHelper = new DatabaseHelper(this);
+
+        currentUser = getIntent().getStringExtra("username");
+        eventName = getIntent().getStringExtra("event_name");
+
+        if (currentUser != null && !currentUser.isEmpty()) {
+            userId = dbHelper.getUserIdByUsername(currentUser);
+        }
+        if (eventName != null && !eventName.isEmpty()) {
+            eventId = dbHelper.getEventId(eventName);
+        }
 
         TextView txtEventName = findViewById(R.id.txtName);
         Button btnConfirm = findViewById(R.id.btnConfirm);
@@ -30,6 +46,7 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
         stars[4] = findViewById(R.id.star5);
 
         eventName = getIntent().getStringExtra("event_name");
+
         if (eventName != null) {
             txtEventName.setText(eventName);
         }
@@ -39,6 +56,7 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
         }
 
         btnConfirm.setOnClickListener(this);
+
     }
 
     @Override
@@ -48,20 +66,17 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
         if (id == R.id.btnConfirm) {
             if (selected == 0) {
                 Toast.makeText(RatingActivity.this, R.string.error_rating, Toast.LENGTH_SHORT).show();
+            }else if (userId == -1 || eventId == -1) {
+                Toast.makeText(RatingActivity.this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
             } else {
-                for (Event e : AppData.allEvents) {
-                    if (e.getName().equals(eventName)) {
-                        e.addRating(selected);
+                boolean res = dbHelper.insertEventRating(userId, eventId, selected);
 
-                        if (!AppData.ratedEvents.contains(eventName)) {
-                            AppData.ratedEvents.add(eventName);
-                        }
-
-                        break;
-                    }
+                if (res) {
+                    Toast.makeText(RatingActivity.this, R.string.rating_saved, Toast.LENGTH_SHORT).show();
+                    finish();
+                } else {
+                    Toast.makeText(RatingActivity.this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
                 }
-                Toast.makeText(RatingActivity.this, R.string.rating_saved, Toast.LENGTH_SHORT).show();
-                finish();
             }
         } else {
             for (int i = 0; i < stars.length; i++) {

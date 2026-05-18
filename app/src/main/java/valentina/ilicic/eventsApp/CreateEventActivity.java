@@ -10,7 +10,9 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class CreateEventActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -18,6 +20,7 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
     private Spinner spinnerCategory;
     private CheckBox cbPromoted;
     private DatabaseHelper dbHelper;
+    private Button btnCreateEvent;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,7 +35,7 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
         editCapacity = findViewById(R.id.editCapacity);
         spinnerCategory = findViewById(R.id.spinnerCategory);
         cbPromoted = findViewById(R.id.cbPromoted);
-        Button btnCreateEvent = findViewById(R.id.btnCreateEvent);
+        btnCreateEvent = findViewById(R.id.btnCreateEvent);
 
         btnCreateEvent.setOnClickListener(this);
         cbPromoted.setOnClickListener(this);
@@ -57,7 +60,6 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
             String dt = editDateTime.getText().toString().trim();
             String category = spinnerCategory.getSelectedItem().toString();
             boolean isPromoted = cbPromoted.isChecked();
-            int imageResId = getIconByCategory(category);
             int capacity = 0;
 
             if (name.isEmpty() || loc.isEmpty() || dt.isEmpty()) {
@@ -100,20 +102,6 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
             }
         }
     }
-    private int getIconByCategory(String category) {
-        switch (category) {
-            case "Party":
-                return android.R.drawable.ic_menu_camera;
-            case "Stand-Up & Theater":
-                return android.R.drawable.ic_menu_info_details;
-            case "Exhibition":
-                return android.R.drawable.ic_menu_gallery;
-            case "Festival":
-                return android.R.drawable.ic_menu_slideshow;
-            default:
-                return android.R.drawable.ic_media_play;
-        }
-    }
 
     private boolean isValidDateTime(String dateTime) {
         String regex = "^\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}$";
@@ -126,12 +114,12 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
         date.setLenient(false);
 
         try {
-            java.util.Date inputDate = date.parse(dateTime.trim());
-            java.util.Date now = new java.util.Date();
+            Date inputDate = date.parse(dateTime.trim());
+            Date now = new java.util.Date();
             if (inputDate.before(now)) {
                 return false;
             }
-        } catch (java.text.ParseException e) {
+        } catch (ParseException e) {
             return false;
         }
         return true;

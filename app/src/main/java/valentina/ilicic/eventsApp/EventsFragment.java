@@ -17,26 +17,34 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
 
     private ListView list;
     private EventAdapter adapter;
-    private DatabaseHelper dbHelper;
-
     private Button btnAddEvent, btnFilterAll, btnFilterParty, btnFilterFestival, btnFilterTheater, btnFilterConcert, btnFilterExhibition;
 
+    private DatabaseHelper dbHelper;
+    private String currentUser = "";
+
     public EventsFragment() {
-        // Required empty public constructor
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_events, container, false);
         dbHelper = new DatabaseHelper(getActivity());
 
+        if (getActivity() != null) {
+            TextView textUsername = getActivity().findViewById(R.id.textUsername);
+            if (textUsername != null) {
+                currentUser = textUsername.getText().toString();
+            }
+        }
+
         list = view.findViewById(R.id.listEvents);
         list.setEmptyView(view.findViewById(R.id.txtNoEvents));
 
-        adapter = new EventAdapter(getActivity());
+        adapter = new EventAdapter(getActivity(), R.layout.list_row, currentUser);
 
         ArrayList<Event> allEventsFromDb = dbHelper.getAllEventsList();
-        adapter.setEvents(AppData.getSorted(allEventsFromDb));
+        adapter.setEvents(allEventsFromDb);
         list.setAdapter(adapter);
 
         btnAddEvent = view.findViewById(R.id.btnAddEvent);
@@ -81,18 +89,11 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
             b.setBackgroundColor(getContext().getColor(R.color.purple_500));
 
             String category = b.getText().toString();
-            ArrayList<Event> dbEvents = dbHelper.getAllEventsList();
 
             if (category.equalsIgnoreCase(getString(R.string.sve)) || category.equalsIgnoreCase("Sve")) {
-                adapter.setEvents(AppData.getSorted(dbEvents));
+                adapter.setEvents(dbHelper.getAllEventsList());
             } else {
-                ArrayList<Event> filteredEvents = new ArrayList<>();
-                for (Event event : dbEvents) {
-                    if (event.getCategory().equalsIgnoreCase(category)) {
-                        filteredEvents.add(event);
-                    }
-                }
-                adapter.setEvents(AppData.getSorted(filteredEvents));
+                adapter.setEvents(dbHelper.getEventsByCategoryList(category));
             }
         }
     }
@@ -104,15 +105,7 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
         if (selectedEvent != null) {
             Intent intent = new Intent(getActivity(), EventDetailsActivity.class);
             intent.putExtra("event_name", selectedEvent.getName());
-
-            if (getActivity() != null) {
-                TextView txtUser = getActivity().findViewById(R.id.textUsername);
-                if (txtUser != null) {
-                    String trenutniUser = txtUser.getText().toString();
-                    intent.putExtra("username", trenutniUser);
-                }
-            }
-
+            intent.putExtra("username", currentUser);
             startActivity(intent);
         }
     }
@@ -122,8 +115,8 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
         super.onResume();
         if (dbHelper != null && adapter != null) {
             ArrayList<Event> refreshedList = dbHelper.getAllEventsList();
-            adapter.setEvents(AppData.getSorted(refreshedList));
+            adapter.setUsername(currentUser);
+            adapter.setEvents(refreshedList);
         }
     }
-
 }

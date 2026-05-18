@@ -16,6 +16,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private UsersTable usersTable;
     private EventsTable eventsTable;
     private AttendanceTable attendanceTable;
+    private RatingsTable ratingsTable;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -24,6 +25,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.usersTable = (UsersTable) DatabaseTableFactory.getUsersTable(context);
         this.eventsTable = (EventsTable) DatabaseTableFactory.getEventsTable(context);
         this.attendanceTable = (AttendanceTable) DatabaseTableFactory.getAttendanceTable(context);
+        this.ratingsTable = (RatingsTable) DatabaseTableFactory.getRatingsTable(context);
     }
 
     @Override
@@ -37,7 +39,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             EventsTable table = (EventsTable) eventsTableInstance;
 
-            //Prošli / Regularni događaji
+            //Prošli regularni događaji
             insertInitialEvent(db, "Jakov Jozinović", "Koncert mlade muzičke senzacije.", "SPENS, Novi Sad", "10.11.2025 20:30", "Concert", 0, 0, 0);
             insertInitialEvent(db, "NEON Party", "Sjajan neon doživljaj uz najbolje DJ izvođače.", "Štark Arena, Beograd", "10.05.2026 22:00", "Party", 0, 0, 0);
             insertInitialEvent(db, "Predstava: Kir Janja", "Vrhunska izvedba večnog klasika Jovana Sterije Popovića na daskama teatra.", "Knjaževsko-srpski teatar, Kragujevac", "05.10.2025 20:00", "Stand-Up & Theater", 0, 0, 0);
@@ -67,6 +69,35 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             attendanceTableInstance.createTable(db);
         }
 
+        DatabaseTable ratingsTableInstance = DatabaseTableFactory.createTable("RATINGS", context);
+        if (ratingsTableInstance != null) {
+            ratingsTableInstance.createTable(db);
+        }
+
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVer, int newVer) {
+        DatabaseTable usersTable = DatabaseTableFactory.createTable("USERS", context);
+        if (usersTable != null) db.execSQL("DROP TABLE IF EXISTS " + usersTable.getTableName());
+
+        DatabaseTable eventsTable = DatabaseTableFactory.createTable("EVENTS", context);
+        if (eventsTable != null) db.execSQL("DROP TABLE IF EXISTS " + eventsTable.getTableName());
+
+        DatabaseTable attendanceTable = DatabaseTableFactory.createTable("ATTENDANCE", context);
+        if (attendanceTable != null)
+            db.execSQL("DROP TABLE IF EXISTS " + attendanceTable.getTableName());
+
+        DatabaseTable ratingsTable = DatabaseTableFactory.createTable("RATINGS", context);
+        if (ratingsTable != null) db.execSQL("DROP TABLE IF EXISTS " + ratingsTable.getTableName());
+
+        onCreate(db);
+    }
+
+    @Override
+    public void onConfigure(SQLiteDatabase db) {
+        super.onConfigure(db);
+        db.setForeignKeyConstraintsEnabled(true);
     }
 
     private void insertInitialEvent(SQLiteDatabase db, String title, String description, String location,
@@ -86,28 +117,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(EventsTable.TABLE_NAME, null, values);
     }
 
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVer, int newVer) {
-        DatabaseTable usersTable = DatabaseTableFactory.createTable("USERS", context);
-        if (usersTable != null) db.execSQL("DROP TABLE IF EXISTS " + usersTable.getTableName());
-
-        DatabaseTable eventsTable = DatabaseTableFactory.createTable("EVENTS", context);
-        if (eventsTable != null) db.execSQL("DROP TABLE IF EXISTS " + eventsTable.getTableName());
-
-        DatabaseTable attendanceTable = DatabaseTableFactory.createTable("ATTENDANCE", context);
-        if (attendanceTable != null) db.execSQL("DROP TABLE IF EXISTS " + attendanceTable.getTableName());
-
-        onCreate(db);
-    }
-
-    @Override
-    public void onConfigure(SQLiteDatabase db) {
-        super.onConfigure(db);
-        db.setForeignKeyConstraintsEnabled(true);
-    }
-
-    // -------------------------------------------------------------------------------------------
-
+    // ---------------------------------- USERS TABLE  ---------------------------------------
     public boolean registerUser(String username, String email, String password) {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
@@ -131,6 +141,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.close();
         }
     }
+
     public boolean checkEmail(String email) {
         SQLiteDatabase db = this.getReadableDatabase();
         try {
@@ -179,7 +190,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // -------------------------------------------------------------------------------------------
+    // ---------------------------------- EVENTS TABLE  ---------------------------------------
 
     public boolean insertEvent(String title, String description, String location,
                                String dateTime, String category, int promoted, int capacity) {
@@ -189,42 +200,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 return eventsTable.insertEvent(db, title, description, location, dateTime, category, promoted, capacity);
             }
             return false;
-        } finally {
-            db.close();
-        }
-    }
-
-    public Cursor getAllCategories() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        if (eventsTable != null) {
-            return eventsTable.getAllCategories(db);
-        }
-        return null;
-    }
-
-    public Cursor getEventsByCategory(String category) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        if (eventsTable != null) {
-            return eventsTable.getEventsByCategory(db, category);
-        }
-        return null;
-    }
-
-    public Cursor getEventByName(String eventName) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        if (eventsTable != null) {
-            return eventsTable.getEventByName(db, eventName);
-        }
-        return null;
-    }
-
-    public int getEventIdByName(String eventName) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        try {
-            if (eventsTable != null) {
-                return eventsTable.getEventIdByName(db, eventName);
-            }
-            return -1;
         } finally {
             db.close();
         }
@@ -242,15 +217,50 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // -------------------------------------------------------------------------------------------
+    public ArrayList<Event> getEventsByCategoryList(String category) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try {
+            if (eventsTable != null) {
+                return eventsTable.getEventsByCategoryList(db, category);
+            }
+            return new ArrayList<>();
+        } finally {
+            db.close();
+        }
+    }
 
-    public boolean setInterested(int userId, int eventId) {
+    public Event getEventByName(String eventName) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try {
+            if (eventsTable != null) {
+                return eventsTable.getEventByName(db, eventName);
+            }
+            return null;
+        } finally {
+            db.close();
+        }
+    }
+
+    public int getEventId(String eventName) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try {
+            if (eventsTable != null) {
+                return eventsTable.getEventId(db, eventName);
+            }
+            return -1;
+        } finally {
+            db.close();
+        }
+    }
+
+    // ---------------------------------- ATTENDANCE TABLE  ---------------------------------------
+    public int setInterested(int userId, int eventId) {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
             if (attendanceTable != null) {
-                return attendanceTable.addInterested(db, userId, eventId);
+                return attendanceTable.setInterested(db, userId, eventId);
             }
-            return false;
+            return -2;
         } finally {
             db.close();
         }
@@ -272,7 +282,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
             if (attendanceTable != null) {
-                return attendanceTable.addAttending(db, userId, eventId, isPromoted, kapacitet, trenutnoPrisutnih);
+                return attendanceTable.setAttending(db, userId, eventId, isPromoted, kapacitet, trenutnoPrisutnih);
             }
             return -2;
         } finally {
@@ -292,11 +302,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    public String getStatus(int userId, int eventId) {
+    public String getAttendanceStatus(int userId, int eventId) {
         SQLiteDatabase db = this.getReadableDatabase();
         try {
             if (attendanceTable != null) {
-                return attendanceTable.getStatus(db, userId, eventId);
+                return attendanceTable.getAttendanceStatus(db, userId, eventId);
             }
             return null;
         } finally {
@@ -323,6 +333,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 return attendanceTable.getAttendingEvents(db, userId);
             }
             return new ArrayList<>();
+        } finally {
+            db.close();
+        }
+    }
+
+    // ---------------------------------- RATINGS TABLE  ---------------------------------------
+    public boolean insertEventRating(int userId, int eventId, int ratingValue) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            if (ratingsTable != null) {
+                return ratingsTable.insertRating(db, userId, eventId, ratingValue);
+            }
+            return false;
+        } finally {
+            db.close();
+        }
+    }
+
+    public boolean eventRated(int userId, int eventId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try {
+            if (ratingsTable != null) {
+                return ratingsTable.eventRated(db, userId, eventId);
+            }
+            return false;
         } finally {
             db.close();
         }

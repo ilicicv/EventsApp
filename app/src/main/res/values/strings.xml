@@ -28,11 +28,11 @@
     <string name="interested_events_text">Interested Events</string>
     <string name="attending_events_text">Attending Events</string>
 
-    <string name="sve">sve</string>
-    <string name="party">party</string>
-    <string name="festival">festival</string>
-    <string name="concert">concert</string>
-    <string name="exhibition">exhibition</string>
+    <string name="sve">Sve</string>
+    <string name="party">Party</string>
+    <string name="festival">Festival</string>
+    <string name="concert">Concert</string>
+    <string name="exhibition">Exhibition</string>
     <string name="dodaj_event">dodaj event</string>
     <string name="featured">FEATURED</string>
     <string name="kategorija">Kategorija</string>
