@@ -14,6 +14,7 @@ public class PasswordActivity extends AppCompatActivity {
     Button btnSavePass;
     String user;
     DatabaseHelper dbHelper;
+    DatabaseRepository repo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,6 +22,7 @@ public class PasswordActivity extends AppCompatActivity {
         setContentView(R.layout.activity_password);
 
         dbHelper = new DatabaseHelper(this);
+        repo = new DatabaseRepository(dbHelper);
 
         editCurrPass = findViewById(R.id.editCurrPass);
         editNewPass = findViewById(R.id.editNewPass);
@@ -51,12 +53,12 @@ public class PasswordActivity extends AppCompatActivity {
                     return;
                 }
 
-                if (!dbHelper.loginUser(user, oldPass)) {
+                if (!repo.loginUser(user, oldPass)) {
                     editCurrPass.setError(getString(R.string.msg_wrongCurrPass));
                     return;
                 }
 
-                if(dbHelper.updatePassword(user, newPass)){
+                if(repo.updatePassword(user, newPass)){
                     Toast.makeText(PasswordActivity.this, getString(R.string.passwordChanged), Toast.LENGTH_SHORT).show();
                     finish();
                 }else{

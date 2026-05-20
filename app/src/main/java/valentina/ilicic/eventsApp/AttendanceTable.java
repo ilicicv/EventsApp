@@ -167,7 +167,7 @@ public class AttendanceTable implements DatabaseTable {
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
-            android.util.Log.e("DB_ERROR", "Greska u getInterestedEvents: ", e);
+            e.printStackTrace();
         } finally {
             if (cursor != null) cursor.close();
         }
@@ -190,7 +190,7 @@ public class AttendanceTable implements DatabaseTable {
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
-            android.util.Log.e("DB_ERROR", "Greska u getAttendingEvents: ", e);
+            e.printStackTrace();
         } finally {
             if (cursor != null) cursor.close();
         }

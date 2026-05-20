@@ -15,6 +15,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     Button btnLogin, btnRegister, btnLoginForm, btnRegisterForm;
     EditText editUsername, editPassword, editUsernameReg, editPasswordReg, editEmailReg;
     DatabaseHelper dbHelper;
+    DatabaseRepository repo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +23,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         setContentView(R.layout.activity_login);
 
         dbHelper = new DatabaseHelper(this);
+        repo = new DatabaseRepository(dbHelper);
 
         btnLogin = findViewById(R.id.btnLogin);
         btnRegister = findViewById(R.id.btnRegister);
@@ -65,7 +67,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 return;
             }
 
-            if (dbHelper.loginUser(user, pass)) {
+            if (repo.loginUser(user, pass)) {
                 Intent intent = new Intent(this, EventsActivity.class);
                 Bundle login = new Bundle();
                 login.putString("username", user);
@@ -86,17 +88,17 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             } else if (pass.length()<6){
                 editPasswordReg.setError(getString(R.string.msg_pass));
             } else {
-                if (dbHelper.checkUsername(user)) {
+                if (repo.checkUsername(user)) {
                     editUsernameReg.setError(getString(R.string.msg_user));
                     return;
                 }
 
-                if (dbHelper.checkEmail(email)) {
+                if (repo.checkEmail(email)) {
                     editEmailReg.setError(getString(R.string.msg_mail));
                     return;
                 }
 
-                if (dbHelper.registerUser(user, email, pass)) {
+                if (repo.registerUser(user, email, pass)) {
                     Intent intent = new Intent(this, EventsActivity.class);
                     Bundle register = new Bundle();
                     register.putString("username", user);

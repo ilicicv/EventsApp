@@ -19,14 +19,17 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
     private EditText editName, editDescription, editLocation, editDateTime, editCapacity;
     private Spinner spinnerCategory;
     private CheckBox cbPromoted;
-    private DatabaseHelper dbHelper;
     private Button btnCreateEvent;
+    private DatabaseHelper dbHelper;
+    private DatabaseRepository repo;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_event);
 
         dbHelper = new DatabaseHelper(this);
+        repo = new DatabaseRepository(dbHelper);
 
         editName = findViewById(R.id.editName);
         editDescription = findViewById(R.id.editDescription);
@@ -94,7 +97,7 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
 
             int promotedValue = isPromoted ? 1 : 0;
 
-            if (dbHelper.insertEvent(name,desc,loc,dt,category, promotedValue,capacity )) {
+            if (repo.insertEvent(name,desc,loc,dt,category, promotedValue,capacity )) {
                 Toast.makeText(CreateEventActivity.this, R.string.msg_kreiran_dogadjaj, Toast.LENGTH_SHORT).show();
                 finish();
             } else {

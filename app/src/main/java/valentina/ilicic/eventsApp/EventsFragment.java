@@ -20,6 +20,7 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
     private Button btnAddEvent, btnFilterAll, btnFilterParty, btnFilterFestival, btnFilterTheater, btnFilterConcert, btnFilterExhibition;
 
     private DatabaseHelper dbHelper;
+    private DatabaseRepository repo;
     private String currentUser = "";
 
     public EventsFragment() {
@@ -29,7 +30,9 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_events, container, false);
+
         dbHelper = new DatabaseHelper(getActivity());
+        repo = new DatabaseRepository(dbHelper);
 
         if (getActivity() != null) {
             TextView textUsername = getActivity().findViewById(R.id.textUsername);
@@ -43,7 +46,7 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
 
         adapter = new EventAdapter(getActivity(), R.layout.list_row, currentUser);
 
-        ArrayList<Event> allEventsFromDb = dbHelper.getAllEventsList();
+        ArrayList<Event> allEventsFromDb = repo.getAllEventsList();
         adapter.setEvents(allEventsFromDb);
         list.setAdapter(adapter);
 
@@ -91,9 +94,9 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
             String category = b.getText().toString();
 
             if (category.equalsIgnoreCase(getString(R.string.sve)) || category.equalsIgnoreCase("Sve")) {
-                adapter.setEvents(dbHelper.getAllEventsList());
+                adapter.setEvents(repo.getAllEventsList());
             } else {
-                adapter.setEvents(dbHelper.getEventsByCategoryList(category));
+                adapter.setEvents(repo.getEventsByCategoryList(category));
             }
         }
     }
@@ -114,7 +117,7 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
     public void onResume() {
         super.onResume();
         if (dbHelper != null && adapter != null) {
-            ArrayList<Event> refreshedList = dbHelper.getAllEventsList();
+            ArrayList<Event> refreshedList = repo.getAllEventsList();
             adapter.setUsername(currentUser);
             adapter.setEvents(refreshedList);
         }

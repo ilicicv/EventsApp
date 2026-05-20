@@ -15,6 +15,7 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
     private int selected = 0;
     private ImageButton[] stars = new ImageButton[5];
     private DatabaseHelper dbHelper;
+    private DatabaseRepository repo;
     private String currentUser = "";
     private int userId = -1;
     private int eventId = -1;
@@ -26,15 +27,16 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
         setContentView(R.layout.activity_rating);
 
         dbHelper = new DatabaseHelper(this);
+        repo = new DatabaseRepository(dbHelper);
 
         currentUser = getIntent().getStringExtra("username");
         eventName = getIntent().getStringExtra("event_name");
 
         if (currentUser != null && !currentUser.isEmpty()) {
-            userId = dbHelper.getUserIdByUsername(currentUser);
+            userId = repo.getUserIdByUsername(currentUser);
         }
         if (eventName != null && !eventName.isEmpty()) {
-            eventId = dbHelper.getEventId(eventName);
+            eventId = repo.getEventId(eventName);
         }
 
         TextView txtEventName = findViewById(R.id.txtName);
@@ -69,7 +71,7 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
             }else if (userId == -1 || eventId == -1) {
                 Toast.makeText(RatingActivity.this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
             } else {
-                boolean res = dbHelper.insertEventRating(userId, eventId, selected);
+                boolean res = repo.insertEventRating(userId, eventId, selected);
 
                 if (res) {
                     Toast.makeText(RatingActivity.this, R.string.rating_saved, Toast.LENGTH_SHORT).show();

@@ -66,7 +66,7 @@ public class RatingsTable implements DatabaseTable{
             }
             return false;
         } catch (Exception e) {
-            android.util.Log.e("DB_ERROR", "Greška u insertRating: ", e);
+            e.printStackTrace();
             return false;
         }
     }
@@ -82,6 +82,7 @@ public class RatingsTable implements DatabaseTable{
 
             return cursor != null && cursor.getCount() > 0;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         } finally {
             if (cursor != null) cursor.close();
@@ -103,6 +104,7 @@ public class RatingsTable implements DatabaseTable{
             }
             return new double[]{0.0, 0.0};
         } catch (Exception e) {
+            e.printStackTrace();
             return new double[]{0.0, 0.0};
         } finally {
             if (cursor != null) {

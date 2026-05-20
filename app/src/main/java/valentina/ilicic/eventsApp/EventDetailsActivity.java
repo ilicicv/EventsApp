@@ -14,6 +14,7 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
     private TextView txtCapacity;
 
     private DatabaseHelper dbHelper;
+    private DatabaseRepository repo;
     private String currentUser = "";
     private int userId = -1;
     private int eventId = -1;
@@ -24,6 +25,7 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         setContentView(R.layout.activity_event_details);
 
         dbHelper = new DatabaseHelper(this);
+        repo = new DatabaseRepository(dbHelper);
 
         Bundle loginData = getIntent().getExtras();
         if (loginData != null) {
@@ -31,9 +33,9 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         }
 
         eventName = getIntent().getStringExtra("event_name");
-        userId = dbHelper.getUserIdByUsername(currentUser);
-        event = dbHelper.getEventByName(eventName);
-        eventId = dbHelper.getEventId(eventName);
+        userId = repo.getUserIdByUsername(currentUser);
+        event = repo.getEventByName(eventName);
+        eventId = repo.getEventId(eventName);
 
         ImageView imgEvent = findViewById(R.id.imageEvents);
         TextView txtName = findViewById(R.id.txtName);
@@ -87,7 +89,7 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         int id = view.getId();
 
         if (id == R.id.btnInterested) {
-            int resInterested = dbHelper.setInterested(userId, eventId);
+            int resInterested = repo.setInterested(userId, eventId);
 
             switch (resInterested) {
                 case 1:
@@ -105,7 +107,7 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
             }
 
         } else if (id == R.id.btnAttending) {
-            int resAttending = dbHelper.setAttending(userId, eventId, event.isPromoted(), event.getCapacity(), event.getAttendingCount());
+            int resAttending = repo.setAttending(userId, eventId, event.isPromoted(), event.getCapacity(), event.getAttendingCount());
 
             switch (resAttending) {
                 case 1:

@@ -18,6 +18,7 @@ public class EventAdapter extends BaseAdapter {
     private ArrayList<Event> events;
     private int layoutId;
     private DatabaseHelper dbHelper;
+    private DatabaseRepository repo;
     private String currentUser = "";
     private int userId = -1;
 
@@ -26,13 +27,7 @@ public class EventAdapter extends BaseAdapter {
         this.events = new ArrayList<>();
         this.layoutId = R.layout.list_row;
         this.dbHelper = new DatabaseHelper(context);
-    }
-
-    public EventAdapter(Context context, int layoutId) {
-        this.context = context;
-        this.events = new ArrayList<>();
-        this.layoutId = layoutId;
-        this.dbHelper = new DatabaseHelper(context);
+        this.repo = new DatabaseRepository(dbHelper);
     }
 
     public EventAdapter(Context context, int layoutId, String currentUser) {
@@ -41,13 +36,14 @@ public class EventAdapter extends BaseAdapter {
         this.layoutId = layoutId;
         this.currentUser = currentUser;
         this.dbHelper = new DatabaseHelper(context);
-        this.userId = dbHelper.getUserIdByUsername(currentUser);
+        this.repo = new DatabaseRepository(dbHelper);
+        this.userId = repo.getUserIdByUsername(currentUser);
     }
 
     public void setUsername(String username) {
         this.currentUser = username;
         if (dbHelper != null) {
-            this.userId = dbHelper.getUserIdByUsername(username);
+            this.userId = repo.getUserIdByUsername(username);
         }
         notifyDataSetChanged();
     }
@@ -136,10 +132,10 @@ public class EventAdapter extends BaseAdapter {
                 if (currentEvent.isPast()) {
                     vh.btnRate.setVisibility(View.VISIBLE);
 
-                    int eventId = dbHelper.getEventId(currentEvent.getName());
+                    int eventId = repo.getEventId(currentEvent.getName());
                     boolean rated = false;
                     if (userId != -1 && eventId != -1) {
-                        rated = dbHelper.eventRated(userId, eventId);
+                        rated = repo.eventRated(userId, eventId);
                     }
 
                     if (!rated) {

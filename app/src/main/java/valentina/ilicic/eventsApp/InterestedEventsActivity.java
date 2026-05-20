@@ -19,6 +19,7 @@ public class InterestedEventsActivity extends AppCompatActivity implements Adapt
     private TextView empty;
     private EventAdapter adapter;
     private DatabaseHelper dbHelper;
+    private DatabaseRepository repo;
     private String currentUsername = "";
 
     @Override
@@ -27,6 +28,7 @@ public class InterestedEventsActivity extends AppCompatActivity implements Adapt
         setContentView(R.layout.activity_interested_events);
 
         dbHelper = new DatabaseHelper(this);
+        repo = new DatabaseRepository(dbHelper);
 
         Bundle loginData = getIntent().getExtras();
         if (loginData != null) {
@@ -51,10 +53,10 @@ public class InterestedEventsActivity extends AppCompatActivity implements Adapt
     }
 
     private void refreshListFromDatabase() {
-        int userId = dbHelper.getUserIdByUsername(currentUsername);
+        int userId = repo.getUserIdByUsername(currentUsername);
 
         if (userId != -1) {
-            ArrayList<Event> interestedEvents = dbHelper.getInterestedEvents(userId, "ZAINTERESOVAN");
+            ArrayList<Event> interestedEvents = repo.getInterestedEvents(userId, "ZAINTERESOVAN");
             adapter.setEvents(interestedEvents);
         } else {
             adapter.setEvents(new ArrayList<>());
@@ -83,11 +85,11 @@ public class InterestedEventsActivity extends AppCompatActivity implements Adapt
         Event event = (Event) adapter.getItem(i);
 
         if (event != null) {
-            int userId = dbHelper.getUserIdByUsername(currentUsername);
+            int userId = repo.getUserIdByUsername(currentUsername);
             String eventName = event.getName();
 
             if (userId != -1) {
-                boolean isRemoved = dbHelper.removeInterested(userId, eventName);
+                boolean isRemoved = repo.removeInterested(userId, eventName);
 
                 if (isRemoved) {
                     refreshListFromDatabase();

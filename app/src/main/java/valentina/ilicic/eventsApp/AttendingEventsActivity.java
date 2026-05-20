@@ -20,6 +20,7 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
     private EventAdapter adapterUpcoming, adapterPast;
 
     private DatabaseHelper dbHelper;
+    private DatabaseRepository repo;
     private String currentUsername = "";
     private int userId = -1;
 
@@ -29,12 +30,13 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
         setContentView(R.layout.activity_attending_events);
 
         dbHelper = new DatabaseHelper(this);
+        repo = new DatabaseRepository(dbHelper);
 
         Bundle loginData = getIntent().getExtras();
         if (loginData != null) {
             currentUsername = loginData.getString("username", "");
         }
-        userId = dbHelper.getUserIdByUsername(currentUsername);
+        userId = repo.getUserIdByUsername(currentUsername);
 
         empty = findViewById(R.id.txtNoAttendingEvents);
         listUpcoming = findViewById(R.id.listUpcoming);
@@ -58,7 +60,7 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
     private void loadData() {
         if (userId == -1) return;
 
-        ArrayList<Event> allEvents = dbHelper.getAttendingEvents(userId);
+        ArrayList<Event> allEvents = repo.getAttendingEvents(userId);
 
         if (allEvents == null || allEvents.isEmpty()) {
             empty.setVisibility(View.VISIBLE);
@@ -115,7 +117,7 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
         Event event = (Event) adapterView.getItemAtPosition(i);
 
         if (event != null && userId != -1) {
-            boolean deleted = dbHelper.removeAttending(userId, event.getName());
+            boolean deleted = repo.removeAttending(userId, event.getName());
 
             if (deleted) {
                 loadData();
