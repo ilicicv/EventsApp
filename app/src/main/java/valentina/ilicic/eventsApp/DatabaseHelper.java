@@ -11,7 +11,7 @@ import java.util.ArrayList;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "EventsApp.db";
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
     private Context context;
     private UsersTable usersTable;
     private EventsTable eventsTable;
@@ -78,20 +78,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVer, int newVer) {
-        DatabaseTable usersTable = DatabaseTableFactory.createTable("USERS", context);
-        if (usersTable != null) db.execSQL("DROP TABLE IF EXISTS " + usersTable.getTableName());
-
-        DatabaseTable eventsTable = DatabaseTableFactory.createTable("EVENTS", context);
-        if (eventsTable != null) db.execSQL("DROP TABLE IF EXISTS " + eventsTable.getTableName());
-
-        DatabaseTable attendanceTable = DatabaseTableFactory.createTable("ATTENDANCE", context);
-        if (attendanceTable != null)
-            db.execSQL("DROP TABLE IF EXISTS " + attendanceTable.getTableName());
-
-        DatabaseTable ratingsTable = DatabaseTableFactory.createTable("RATINGS", context);
-        if (ratingsTable != null) db.execSQL("DROP TABLE IF EXISTS " + ratingsTable.getTableName());
-
-        onCreate(db);
+        if (oldVer < 2) {
+            try {
+                db.execSQL("ALTER TABLE " + UsersTable.TABLE_NAME +
+                        " ADD COLUMN " + UsersTable.COL_IS_ADMIN + " INTEGER NOT NULL DEFAULT 0");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override

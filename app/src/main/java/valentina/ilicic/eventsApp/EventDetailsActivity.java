@@ -80,13 +80,14 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onClick(View view) {
+        int id = view.getId();
+
         if (event == null || userId == -1 || eventId == -1) return;
 
-//        if (event.isPast()) {
-//            Toast.makeText(this, R.string.msg_prosao_dogadjaj, Toast.LENGTH_SHORT).show();
-//            return;
-//        }
-        int id = view.getId();
+        if (event.isPast()) {
+            Toast.makeText(this, R.string.msg_prosao_dogadjaj, Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         if (id == R.id.btnInterested) {
             int resInterested = repo.setInterested(userId, eventId);

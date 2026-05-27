@@ -66,7 +66,7 @@
     <string name="popunite_polja">Popunite sva obavezna polja.</string>
     <string name="msg_ispravan_kapacitet">Unesite ispravan kapacitet.</string>
     <string name="msg_kreiran_dogadjaj">Događaj uspešno kreiran.</string>
-    <string name="msg_format_datuma">Neispravan datum/vreme! \nFormat: dd.mm.yyyy HH:mm</string>
+    <string name="msg_format_datuma">Datum mora biti u formatu: dan.mesec.godina. sat:minut</string>
     <string name="msg_vec_dodat">Već ste dodali ovaj događaj u zainteresovane!</string>
     <string name="msg_vec_attending">Već ste na listi učesnika!</string>
     <string name="msg_uklonjeno_zainteresovani">Uklonjeno iz zainteresovanih.</string>
@@ -80,6 +80,8 @@
     <string name="msg_dberror">Failed due to a database error.</string>
     <string name="msg_wrongCurrPass">Incorrect current password!</string>
     <string name="msg_ucitavanje_eventa">\"Greška pri čitanju događaja: \"</string>
+    <string name="msg_prosao_datum">Datum je prošao! Izaberite budući datum!</string>
+    <string name="registruj_admin">Registruj se kao administrator:</string>
 
     <string-array name="categories_array">
         <item>Party</item>

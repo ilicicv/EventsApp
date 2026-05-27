@@ -2,26 +2,33 @@ package valentina.ilicic.eventsApp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 public class CreateEventActivity extends AppCompatActivity implements View.OnClickListener {
 
     private EditText editName, editDescription, editLocation, editDateTime, editCapacity;
+    private ImageButton btnCalendarIcon;
     private Spinner spinnerCategory;
     private CheckBox cbPromoted;
     private Button btnCreateEvent;
     private DatabaseHelper dbHelper;
     private DatabaseRepository repo;
+    private boolean isPastDate = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +46,12 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
         spinnerCategory = findViewById(R.id.spinnerCategory);
         cbPromoted = findViewById(R.id.cbPromoted);
         btnCreateEvent = findViewById(R.id.btnCreateEvent);
+        btnCalendarIcon = findViewById(R.id.btnCalendarIcon);
 
         btnCreateEvent.setOnClickListener(this);
         cbPromoted.setOnClickListener(this);
+
+        btnCalendarIcon.setOnClickListener(this);
     }
 
     @Override
@@ -54,6 +64,10 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
                 editCapacity.setVisibility(View.GONE);
                 editCapacity.setText("");
             }
+        }
+
+        if (view.getId() == R.id.btnCalendarIcon) {
+            showDateTimePicker();
         }
 
         if (view.getId() == R.id.btnCreateEvent) {
@@ -71,7 +85,11 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
             }
 
             if (!isValidDateTime(dt)) {
-                Toast.makeText(this, R.string.msg_format_datuma, Toast.LENGTH_LONG).show();
+                if (isPastDate) {
+                    Toast.makeText(this, R.string.msg_prosao_datum, Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(this, R.string.msg_format_datuma, Toast.LENGTH_LONG).show();
+                }
                 return;
             }
 
@@ -106,25 +124,62 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-    private boolean isValidDateTime(String dateTime) {
-        String regex = "^\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}$";
+    private void showDateTimePicker() {
+        final Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
 
-        if (!dateTime.trim().matches(regex)) {
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, selectedYear, selectedMonth, selectedDay) -> {
+            int hour = calendar.get(Calendar.HOUR_OF_DAY);
+            int minute = calendar.get(Calendar.MINUTE);
+
+            TimePickerDialog timePickerDialog = new TimePickerDialog(this, (timeView, selectedHour, selectedMinute) -> {
+
+                String formattedDateTime = String.format(Locale.getDefault(), "%02d.%02d.%d %02d:%02d",
+                        selectedDay, selectedMonth + 1, selectedYear, selectedHour, selectedMinute);
+
+                editDateTime.setText(formattedDateTime);
+
+            }, hour, minute, true);
+
+            timePickerDialog.show();
+        }, year, month, day);
+
+        datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
+        datePickerDialog.show();
+    }
+
+    private boolean isValidDateTime(String dateTime) {
+
+        String regex = "^\\d{1,2}\\.\\d{1,2}\\.\\d{4}\\.? \\d{1,2}:\\d{2}$";
+        String trimmed = dateTime.trim();
+
+        if (!trimmed.matches(regex)) {
             return false;
         }
 
-        SimpleDateFormat date = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+        if (trimmed.contains(". ")) {
+            trimmed = trimmed.replace(". ", " ");
+        }
+
+        SimpleDateFormat date = new SimpleDateFormat("d.M.yyyy HH:mm", Locale.getDefault());
         date.setLenient(false);
 
         try {
-            Date inputDate = date.parse(dateTime.trim());
-            Date now = new java.util.Date();
+            Date inputDate = date.parse(trimmed);
+            Date now = new Date();
+
             if (inputDate.before(now)) {
+                isPastDate = true;
                 return false;
             }
+
+            return true;
         } catch (ParseException e) {
             return false;
         }
-        return true;
     }
+
+
 }

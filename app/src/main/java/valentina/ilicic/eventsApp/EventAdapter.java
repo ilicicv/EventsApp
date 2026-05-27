@@ -11,7 +11,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 public class EventAdapter extends BaseAdapter {
     private Context context;
@@ -105,8 +109,23 @@ public class EventAdapter extends BaseAdapter {
             if (vh.txtName != null) vh.txtName.setText(currentEvent.getName());
             if (vh.txtCategory != null) vh.txtCategory.setText(currentEvent.getCategory());
             if (vh.txtLocation != null) vh.txtLocation.setText(currentEvent.getLocation());
-            if (vh.txtDateTime != null) vh.txtDateTime.setText(currentEvent.getDateTime());
             if (vh.imageEvents != null) vh.imageEvents.setImageResource(currentEvent.getImageResId());
+
+            if (vh.txtDateTime != null) {
+                String dateTimeFromDb = currentEvent.getDateTime();
+
+
+                SimpleDateFormat inputFormat = new SimpleDateFormat("d.M.yyyy HH:mm", Locale.getDefault());
+                SimpleDateFormat outputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
+
+                try {
+                    Date date = inputFormat.parse(dateTimeFromDb);
+                    String formattedDateTime = outputFormat.format(date);
+                    vh.txtDateTime.setText(formattedDateTime);
+                } catch (ParseException e) {
+                    vh.txtDateTime.setText(dateTimeFromDb);
+                }
+            }
 
             if (vh.txtFeatured != null && vh.txtCapacity != null) {
                 if (currentEvent.isPromoted() && !currentEvent.isPast()) {

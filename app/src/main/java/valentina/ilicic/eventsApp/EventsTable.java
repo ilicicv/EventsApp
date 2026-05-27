@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -168,12 +167,12 @@ public class EventsTable implements DatabaseTable {
         int brojOcena = cursor.getInt(cursor.getColumnIndexOrThrow(COL_BR_OCENA));
 
         if (promoted == 1) {
-            return EventFactory.createPromotedFromDb(
+            return EventFactory.createPromotedEvent(
                     naziv, opis, lokacija, datumVreme, kategorija,
                     kapacitet, prisutni, prosecnaOcena, brojOcena
             );
         } else {
-            return EventFactory.createRegularFromDb(
+            return EventFactory.createRegularEvent(
                     naziv, opis, lokacija, datumVreme, kategorija,
                     prisutni, prosecnaOcena, brojOcena
             );

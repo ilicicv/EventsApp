@@ -210,12 +210,12 @@ public class AttendanceTable implements DatabaseTable {
         int brojOcena = cursor.getInt(cursor.getColumnIndexOrThrow("brojOcena"));
 
         if (promoted == 1) {
-            return EventFactory.createPromotedFromDb(
+            return EventFactory.createPromotedEvent(
                     naziv, opis, lokacija, datumVreme, kategorija,
                     kapacitet, prisutni, prosecnaOcena, brojOcena
             );
         } else {
-            return EventFactory.createRegularFromDb(
+            return EventFactory.createRegularEvent(
                     naziv, opis, lokacija, datumVreme, kategorija,
                     prisutni, prosecnaOcena, brojOcena
             );

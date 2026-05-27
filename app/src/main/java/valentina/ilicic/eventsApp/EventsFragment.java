@@ -51,6 +51,18 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
         list.setAdapter(adapter);
 
         btnAddEvent = view.findViewById(R.id.btnAddEvent);
+
+        boolean isAdmin = false;
+        if (getArguments() != null) {
+            isAdmin = getArguments().getBoolean("isAdmin", false);
+        }
+
+        if (isAdmin) {
+            btnAddEvent.setVisibility(View.VISIBLE);
+        } else {
+            btnAddEvent.setVisibility(View.GONE);
+        }
+
         btnFilterAll = view.findViewById(R.id.btnFilterAll);
         btnFilterParty = view.findViewById(R.id.btnFilterParty);
         btnFilterFestival = view.findViewById(R.id.btnFilterFestival);

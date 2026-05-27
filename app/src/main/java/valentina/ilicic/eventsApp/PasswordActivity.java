@@ -53,7 +53,8 @@ public class PasswordActivity extends AppCompatActivity {
                     return;
                 }
 
-                if (!repo.loginUser(user, oldPass)) {
+                // -1 = pogrešna lozinka
+                if (repo.loginUser(user, oldPass) == -1) {
                     editCurrPass.setError(getString(R.string.msg_wrongCurrPass));
                     return;
                 }

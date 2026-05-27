@@ -34,13 +34,31 @@
         android:inputType="text"
         />
 
-    <EditText
-        android:id="@+id/editDateTime"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/dd_mm_yyyy_hh_mm"
-        android:digits="0123456789. :"/>"
-        />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <EditText
+            android:id="@+id/editDateTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/dd_mm_yyyy_hh_mm"
+            android:digits="0123456789. :"
+            android:clickable="true"
+            />
+
+        <ImageButton
+            android:id="@+id/btnCalendarIcon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_my_calendar"
+            android:background="?android:attr/selectableItemBackground"
+            />
+
+    </LinearLayout>
 
     <EditText
         android:id="@+id/editCapacity"

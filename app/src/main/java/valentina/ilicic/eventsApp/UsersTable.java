@@ -11,6 +11,7 @@ public class UsersTable implements DatabaseTable{
     public static final String COL_USERNAME = "username";
     public static final String COL_EMAIL = "email";
     public static final String COL_LOZINKA = "lozinka";
+    public static final String COL_IS_ADMIN = "is_admin";
     private Context context;
 
     @Override
@@ -19,7 +20,8 @@ public class UsersTable implements DatabaseTable{
                 COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_USERNAME + " TEXT UNIQUE NOT NULL, " +
                 COL_EMAIL + " TEXT UNIQUE NOT NULL, " +
-                COL_LOZINKA + " TEXT NOT NULL)");
+                COL_LOZINKA + " TEXT NOT NULL, " +
+                COL_IS_ADMIN + " INTEGER NOT NULL DEFAULT 0)");
     }
 
     @Override
@@ -31,7 +33,7 @@ public class UsersTable implements DatabaseTable{
         this.context = context;
     }
 
-    public boolean registerUser(SQLiteDatabase db, String username, String email, String password) {
+    public boolean registerUser(SQLiteDatabase db, String username, String email, String password, boolean isAdmin) {
         try {
             ContentValues values = new ContentValues();
             values.put(COL_USERNAME, username);
@@ -39,6 +41,7 @@ public class UsersTable implements DatabaseTable{
 
             String hashedPassword = PasswordHasher.hashPassword(password);
             values.put(COL_LOZINKA, hashedPassword);
+            values.put(COL_IS_ADMIN, isAdmin ? 1 : 0);
 
             long insertUser = db.insert(TABLE_NAME, null, values);
             return insertUser != -1;
@@ -71,12 +74,13 @@ public class UsersTable implements DatabaseTable{
         }
     }
 
-    public boolean loginUser(SQLiteDatabase db, String username, String enteredPassword) {
+    public int loginUser(SQLiteDatabase db, String username, String enteredPassword) {
         Cursor cursor = null;
         try {
+
             cursor = db.query(
                     TABLE_NAME,
-                    new String[]{COL_LOZINKA},
+                    new String[]{COL_LOZINKA, COL_IS_ADMIN},
                     COL_USERNAME + " = ?",
                     new String[]{username},
                     null, null, null
@@ -84,16 +88,15 @@ public class UsersTable implements DatabaseTable{
 
             if (cursor != null && cursor.moveToFirst()) {
                 String storedHashedPassword = cursor.getString(0);
+                int isAdmin = cursor.getInt(1);
 
                 if (PasswordHasher.verifyPassword(enteredPassword, storedHashedPassword)) {
-                    return true;
-                } else {
-                    return false;
+                    return isAdmin; // 1 admin, 0 običan korisnik
                 }
             }
-            return false;
+            return -1;
         } catch (Exception e) {
-            return false;
+            return -1;
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -121,11 +124,7 @@ public class UsersTable implements DatabaseTable{
     public int getUserIdByUsername(SQLiteDatabase db, String username) {
         Cursor cursor = null;
         try {
-            cursor = db.query(
-                    TABLE_NAME,
-                    new String[]{COL_ID},
-                    COL_USERNAME + " = ?",
-                    new String[]{username},
+            cursor = db.query(TABLE_NAME, new String[]{COL_ID},  COL_USERNAME + " = ?", new String[]{username},
                     null, null, null
             );
 

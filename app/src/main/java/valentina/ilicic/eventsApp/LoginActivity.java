@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
@@ -14,6 +15,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     LinearLayout layoutStart, layoutLogin, layoutRegister;
     Button btnLogin, btnRegister, btnLoginForm, btnRegisterForm;
     EditText editUsername, editPassword, editUsernameReg, editPasswordReg, editEmailReg;
+    CheckBox isAdmin;
     DatabaseHelper dbHelper;
     DatabaseRepository repo;
 
@@ -35,6 +37,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         editUsernameReg = findViewById(R.id.editUsernameReg);
         editPasswordReg = findViewById(R.id.editPassReg);
         editEmailReg = findViewById(R.id.editEmailReg);
+
+        isAdmin = findViewById(R.id.cbIsAdmin);
 
         layoutStart = findViewById(R.id.formStart);
         layoutLogin = findViewById(R.id.formLogin);
@@ -67,10 +71,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 return;
             }
 
-            if (repo.loginUser(user, pass)) {
+            int adminStatus = repo.loginUser(user, pass);
+
+            if (adminStatus != -1) {
                 Intent intent = new Intent(this, EventsActivity.class);
                 Bundle login = new Bundle();
                 login.putString("username", user);
+                login.putBoolean("isAdmin", adminStatus == 1);
                 intent.putExtras(login);
                 startActivity(intent);
             } else {
@@ -83,9 +90,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             String pass = editPasswordReg.getText().toString().trim();
             String email = editEmailReg.getText().toString().trim();
 
+            boolean isUserAdmin = isAdmin.isChecked();
+
             if (user.isEmpty() || email.isEmpty() || pass.isEmpty()) {
                 editUsernameReg.setError(getString(R.string.errorRegister));
-            } else if (pass.length()<6){
+            } else if (pass.length() < 6){
                 editPasswordReg.setError(getString(R.string.msg_pass));
             } else {
                 if (repo.checkUsername(user)) {
@@ -98,11 +107,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     return;
                 }
 
-                if (repo.registerUser(user, email, pass)) {
+                if (repo.registerUser(user, email, pass, isUserAdmin)) {
                     Intent intent = new Intent(this, EventsActivity.class);
                     Bundle register = new Bundle();
                     register.putString("username", user);
                     register.putString("email", email);
+                    register.putBoolean("isAdmin", isUserAdmin);
                     intent.putExtras(register);
                     startActivity(intent);
                 } else {

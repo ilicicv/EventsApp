@@ -83,8 +83,8 @@
         android:layout_gravity="center"
         android:orientation="vertical"
         android:paddingHorizontal="8dp"
-        android:paddingTop="8dp"
         android:visibility="gone"
+        android:paddingTop="8dp"
         >
 
         <LinearLayout
@@ -156,6 +156,28 @@
                 android:inputType="textPassword"
                 android:autofillHints="password"
                 />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/registruj_admin"
+                android:textSize="16sp" />
+
+            <CheckBox
+                android:id="@+id/cbIsAdmin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
         </LinearLayout>
 

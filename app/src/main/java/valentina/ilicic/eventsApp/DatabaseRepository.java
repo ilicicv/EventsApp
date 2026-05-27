@@ -12,11 +12,11 @@ public class DatabaseRepository {
     }
 
     // ---------------------------------- USERS TABLE  ---------------------------------------
-    public boolean registerUser(String username, String email, String password) {
+    public boolean registerUser(String username, String email, String password, boolean isAdmin) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         try {
             if (dbHelper.getUsersTable() != null) {
-                return dbHelper.getUsersTable().registerUser(db, username, email, password);
+                return dbHelper.getUsersTable().registerUser(db, username, email, password, isAdmin);
             }
             return false;
         } finally {
@@ -48,13 +48,13 @@ public class DatabaseRepository {
         }
     }
 
-    public boolean loginUser(String username, String password) {
+    public int loginUser(String username, String password) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         try {
             if (dbHelper.getUsersTable() != null) {
                 return dbHelper.getUsersTable().loginUser(db, username, password);
             }
-            return false;
+            return -1;
         } finally {
             db.close();
         }

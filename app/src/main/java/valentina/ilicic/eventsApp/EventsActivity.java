@@ -29,10 +29,17 @@ public class EventsActivity extends AppCompatActivity implements View.OnClickLis
         myEventsFragm = new MyEventsFragment();
 
         Bundle user = getIntent().getExtras();
+        boolean isAdmin = false;
+
         if(user != null){
             String username = user.getString("username");
             textUsername.setText(username);
+            isAdmin = user.getBoolean("isAdmin", false);
         }
+
+        Bundle adminInfo = new Bundle();
+        adminInfo.putBoolean("isAdmin", isAdmin);
+        eventsFragm.setArguments(adminInfo);
 
         btnEvents.setOnClickListener(this);
         btnMyEvents.setOnClickListener(this);
