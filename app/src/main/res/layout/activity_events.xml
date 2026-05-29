@@ -80,9 +80,7 @@
             android:text="@string/friends"
             android:layout_weight="1"
             android:textSize="12sp"
-
-            android:backgroundTint="@color/blue_grey"
-            android:enabled="false"
+            android:backgroundTint="@color/blue"
             />
 
     </LinearLayout>

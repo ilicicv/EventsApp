@@ -14,6 +14,7 @@ public class EventsActivity extends AppCompatActivity implements View.OnClickLis
     TextView textUsername;
     EventsFragment eventsFragm;
     MyEventsFragment myEventsFragm;
+    FriendsFragment friendsFragm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,9 +28,10 @@ public class EventsActivity extends AppCompatActivity implements View.OnClickLis
 
         eventsFragm = new EventsFragment();
         myEventsFragm = new MyEventsFragment();
+        friendsFragm = new FriendsFragment();
 
         SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
-        String username = prefs.getString("username", "Korisnik");
+        String username = prefs.getString("username", "");
 
         textUsername.setText(username);
 
@@ -54,6 +56,11 @@ public class EventsActivity extends AppCompatActivity implements View.OnClickLis
         } else if (id == R.id.btnEvents) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragmentLayout, eventsFragm)
+                    .addToBackStack(null)
+                    .commit();
+        } else if (id == R.id.btnFriends) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentLayout, friendsFragm)
                     .addToBackStack(null)
                     .commit();
         }

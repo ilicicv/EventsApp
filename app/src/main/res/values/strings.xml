@@ -89,8 +89,13 @@
     <string-array name="categories_array">
         <item>Party</item>
         <item>Festival</item>
-        <item>Stand-Up &amp; Theater</item> <item>Concert</item>
+        <item>Stand-Up &amp; Theater</item>
+        <item>Concert</item>
         <item>Exhibition</item>
     </string-array>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="no_friends_act">No friends activity to show</string>
+    <string name="fr_act">Friends Activity</string>
 
 </resources>
