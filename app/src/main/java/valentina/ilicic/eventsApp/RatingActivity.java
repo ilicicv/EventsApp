@@ -1,13 +1,13 @@
 package valentina.ilicic.eventsApp;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import org.json.JSONObject;
 
 public class RatingActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -20,7 +20,6 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
     private int userId = -1;
     private int eventId = -1;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,7 +28,7 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
         dbHelper = new DatabaseHelper(this);
         repo = new DatabaseRepository(dbHelper);
 
-        currentUser = getIntent().getStringExtra("username");
+        currentUser = getSharedPreferences("UserData", MODE_PRIVATE).getString("username", "");
         eventName = getIntent().getStringExtra("event_name");
 
         if (currentUser != null && !currentUser.isEmpty()) {
@@ -47,8 +46,6 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
         stars[3] = findViewById(R.id.star4);
         stars[4] = findViewById(R.id.star5);
 
-        eventName = getIntent().getStringExtra("event_name");
-
         if (eventName != null) {
             txtEventName.setText(eventName);
         }
@@ -58,7 +55,6 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
         }
 
         btnConfirm.setOnClickListener(this);
-
     }
 
     @Override
@@ -68,17 +64,46 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
         if (id == R.id.btnConfirm) {
             if (selected == 0) {
                 Toast.makeText(RatingActivity.this, R.string.error_rating, Toast.LENGTH_SHORT).show();
-            }else if (userId == -1 || eventId == -1) {
+            } else if (userId == -1 || eventId == -1) {
                 Toast.makeText(RatingActivity.this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
             } else {
-                boolean res = repo.insertEventRating(userId, eventId, selected);
+                String mongoUserId = getSharedPreferences("UserData", MODE_PRIVATE).getString("mongoUserId", "");
 
-                if (res) {
-                    Toast.makeText(RatingActivity.this, R.string.rating_saved, Toast.LENGTH_SHORT).show();
-                    finish();
-                } else {
-                    Toast.makeText(RatingActivity.this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
-                }
+                new Thread(() -> {
+                    HTTPHelper helper = new HTTPHelper();
+                    String mongoEventId = helper.getMongoIdByName(eventName);
+
+                    if (mongoEventId == null) {
+                        runOnUiThread(() -> Toast.makeText(RatingActivity.this, R.string.err_server, Toast.LENGTH_SHORT).show());
+                        return;
+                    }
+
+                    try {
+                        JSONObject ratingJson = new JSONObject();
+                        ratingJson.put("userId", mongoUserId);
+                        ratingJson.put("eventId", mongoEventId);
+                        ratingJson.put("rating", selected);
+
+                        JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/ratings", ratingJson);
+
+                        if (response != null) {
+                            runOnUiThread(() -> {
+                                boolean res = repo.insertEventRating(userId, eventId, selected);
+                                if (res) {
+                                    Toast.makeText(RatingActivity.this, R.string.rating_saved, Toast.LENGTH_SHORT).show();
+                                    finish();
+                                } else {
+                                    Toast.makeText(RatingActivity.this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } else {
+                            runOnUiThread(() -> Toast.makeText(RatingActivity.this, R.string.err_server, Toast.LENGTH_SHORT).show());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        runOnUiThread(() -> Toast.makeText(RatingActivity.this, R.string.err_server, Toast.LENGTH_SHORT).show());
+                    }
+                }).start();
             }
         } else {
             for (int i = 0; i < stars.length; i++) {

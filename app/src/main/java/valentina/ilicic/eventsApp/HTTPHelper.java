@@ -118,4 +118,22 @@ public class HTTPHelper {
         urlConnection.disconnect();
         return responseCode == HttpURLConnection.HTTP_OK;
     }
+
+    public String getMongoIdByName(String name) {
+        try {
+            JSONArray array = getJSONArrayFromURL(BASE_URL + "/events");
+
+            if (array != null) {
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject obj = array.getJSONObject(i);
+                    if (obj.getString("name").equals(name)) {
+                        return obj.getString("_id");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

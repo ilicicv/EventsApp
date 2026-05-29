@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -20,7 +19,6 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
     private DatabaseRepository repo;
     private int userId = -1;
     private int eventId = -1;
-    private String mongoEventId;
     private String mongoUserId;
     String currentUser = "";
 
@@ -37,17 +35,9 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         mongoUserId = prefs.getString("mongoUserId", "");
 
         eventName = getIntent().getStringExtra("event_name");
-        mongoEventId = getIntent().getStringExtra("mongoEventId");
         userId = repo.getUserIdByUsername(currentUser);
         event = repo.getEventByName(eventName);
         eventId = repo.getEventId(eventName);
-
-        Log.e("DEBUG_DETAILS", "Username iz SharedPreferences: " + currentUser);
-        Log.e("DEBUG_DETAILS", "Event Name: " + eventName);
-        Log.e("DEBUG_DETAILS", "Mongo Event ID: " + mongoEventId);
-        Log.e("DEBUG_DETAILS", "Mongo User ID: " + mongoUserId);
-        Log.e("DEBUG_DETAILS", "Local User ID (DB): " + userId);
-        Log.e("DEBUG_DETAILS", "Local Event ID (DB): " + eventId);
 
         ImageView imgEvent = findViewById(R.id.imageEvents);
         TextView txtName = findViewById(R.id.txtName);
@@ -104,47 +94,37 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
             return;
         }
 
-        if (id == R.id.btnInterested) {
-            new Thread(() -> {
-                try {
-                    JSONObject json = new JSONObject();
-                    json.put("userId", mongoUserId);
-                    json.put("eventId", mongoEventId);
+        new Thread(() -> {
+            HTTPHelper helperForId = new HTTPHelper();
+            String currentMongoId = helperForId.getMongoIdByName(eventName);
+
+            if (currentMongoId == null) {
+                runOnUiThread(() -> Toast.makeText(this, R.string.err_server, Toast.LENGTH_SHORT).show());
+                return;
+            }
+
+            try {
+                JSONObject json = new JSONObject();
+                json.put("userId", mongoUserId);
+                json.put("eventId", currentMongoId);
+
+                HTTPHelper helper = new HTTPHelper();
+                if (id == R.id.btnInterested) {
                     json.put("commitment", "ZAINTERESOVAN");
-
-                    HTTPHelper helper = new HTTPHelper();
                     JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/attendance", json);
-
                     if (response != null) {
                         runOnUiThread(() -> {
                             int resInterested = repo.setInterested(userId, eventId);
-                            if (resInterested == 1) {
-                                Toast.makeText(this, R.string.added_to_interested, Toast.LENGTH_SHORT).show();
-                            } else if (resInterested == 0) {
-                                Toast.makeText(this, R.string.msg_vec_dodat, Toast.LENGTH_SHORT).show();
-                            }
+                            if (resInterested == 1) Toast.makeText(this, R.string.added_to_interested, Toast.LENGTH_SHORT).show();
+                            else if (resInterested == 0) Toast.makeText(this, R.string.msg_vec_dodat, Toast.LENGTH_SHORT).show();
                         });
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }).start();
-
-        } else if (id == R.id.btnAttending) {
-            new Thread(() -> {
-                try {
-                    JSONObject json = new JSONObject();
-                    json.put("userId", mongoUserId);
-                    json.put("eventId", mongoEventId);
+                } else if (id == R.id.btnAttending) {
                     json.put("commitment", "PRISUSTVUJE");
-
-                    HTTPHelper helper = new HTTPHelper();
                     JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/attendance", json);
-
                     if (response != null) {
                         runOnUiThread(() -> {
                             int resAttending = repo.setAttending(userId, eventId, event.isPromoted(), event.getCapacity(), event.getAttendingCount());
-
                             if (resAttending == 1) {
                                 Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
                                 if (event.isPromoted()) {
@@ -152,18 +132,14 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
                                     int newFreeSeats = event.getCapacity() - event.getAttendingCount();
                                     txtCapacity.setText(getString(R.string.slobodnih_mesta_x_y, newFreeSeats, event.getCapacity()));
                                 }
-                            } else if (resAttending == 0) {
-                                Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
-                            } else if (resAttending == -1) {
-                                Toast.makeText(this, R.string.msg_nema_slobodnih, Toast.LENGTH_SHORT).show();
-                            }
+                            } else if (resAttending == 0) Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
+                            else if (resAttending == -1) Toast.makeText(this, R.string.msg_nema_slobodnih, Toast.LENGTH_SHORT).show();
                         });
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
-            }).start();
-        }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
-
 }

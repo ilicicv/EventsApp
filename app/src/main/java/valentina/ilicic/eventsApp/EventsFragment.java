@@ -15,7 +15,6 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class EventsFragment extends Fragment implements View.OnClickListener, AdapterView.OnItemClickListener {
     private ListView list;
@@ -24,7 +23,6 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
     private DatabaseHelper dbHelper;
     private DatabaseRepository repo;
     private String currentCategoryFilter = null;
-    public static HashMap<String, String> eventIdMap = new HashMap<>();
 
     public EventsFragment() {}
 
@@ -114,14 +112,11 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
                 if (array != null) {
                     if (category == null) {
                         repo.deleteAllEvents();
-                        eventIdMap.clear();
                     }
 
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
                         String name = obj.getString("name");
-                        String mongoId = obj.getString("_id");
-                        eventIdMap.put(name, mongoId);
 
                         if (!repo.eventExists(name)) {
                             repo.insertEvent(name,
@@ -154,14 +149,8 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
         Event selectedEvent = (Event) adapter.getItem(i);
         if (selectedEvent != null) {
-            String user = getActivity().getSharedPreferences("UserData", Context.MODE_PRIVATE)
-                    .getString("username", "");
-
-            String mongoEventId = eventIdMap.get(selectedEvent.getName());
-
             Intent intent = new Intent(getActivity(), EventDetailsActivity.class);
             intent.putExtra("event_name", selectedEvent.getName());
-            intent.putExtra("mongoEventId", mongoEventId);
             startActivity(intent);
         }
     }
