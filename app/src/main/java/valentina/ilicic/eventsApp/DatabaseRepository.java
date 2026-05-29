@@ -4,10 +4,9 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.ArrayList;
 
 public class DatabaseRepository {
-
     private final DatabaseHelper dbHelper;
-
     public DatabaseRepository(DatabaseHelper dbHelper) {
+
         this.dbHelper = dbHelper;
     }
 
@@ -142,6 +141,29 @@ public class DatabaseRepository {
                 return dbHelper.getEventsTable().getEventId(db, eventName);
             }
             return -1;
+        } finally {
+            db.close();
+        }
+    }
+
+    public boolean eventExists(String eventName) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        try {
+            if (dbHelper.getEventsTable() != null) {
+                return dbHelper.getEventsTable().eventExists(db, eventName);
+            }
+            return false;
+        } finally {
+            db.close();
+        }
+    }
+
+    public void deleteAllEvents() {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        try {
+            if (dbHelper.getEventsTable() != null) {
+                dbHelper.getEventsTable().deleteAllEvents(db);
+            }
         } finally {
             db.close();
         }

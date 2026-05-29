@@ -13,6 +13,9 @@ import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -50,14 +53,13 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
 
         btnCreateEvent.setOnClickListener(this);
         cbPromoted.setOnClickListener(this);
-
         btnCalendarIcon.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View view) {
-
-        if (view.getId() == R.id.cbPromoted) {
+        int id = view.getId();
+        if (id == R.id.cbPromoted) {
             if (cbPromoted.isChecked()) {
                 editCapacity.setVisibility(View.VISIBLE);
             } else {
@@ -66,11 +68,11 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
             }
         }
 
-        if (view.getId() == R.id.btnCalendarIcon) {
+        if (id == R.id.btnCalendarIcon) {
             showDateTimePicker();
         }
 
-        if (view.getId() == R.id.btnCreateEvent) {
+        if (id == R.id.btnCreateEvent) {
             String name = editName.getText().toString().trim();
             String desc = editDescription.getText().toString().trim();
             String loc = editLocation.getText().toString().trim();
@@ -95,32 +97,54 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
 
             if (isPromoted) {
                 String cap = editCapacity.getText().toString().trim();
-
                 if (cap.isEmpty()) {
                     Toast.makeText(this, R.string.msg_ispravan_kapacitet, Toast.LENGTH_SHORT).show();
                     return;
                 }
-
                 try {
                     capacity = Integer.parseInt(cap);
-                    if (capacity <= 0) {
-                        Toast.makeText(this, R.string.msg_ispravan_kapacitet, Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+                    if (capacity <= 0) throw new NumberFormatException();
                 } catch (NumberFormatException e) {
                     Toast.makeText(this, R.string.msg_ispravan_kapacitet, Toast.LENGTH_SHORT).show();
                     return;
                 }
             }
 
+            final int finalCapacity = capacity;
             int promotedValue = isPromoted ? 1 : 0;
+            JSONObject eventJSON = new JSONObject();
+            try {
+                eventJSON.put("name", name);
+                eventJSON.put("description", desc);
+                eventJSON.put("location", loc);
+                eventJSON.put("eventTime", dt);
+                eventJSON.put("category", category);
+                eventJSON.put("promoted", promotedValue);
+                eventJSON.put("capacity", capacity);
+            } catch (JSONException e) { e.printStackTrace(); }
 
-            if (repo.insertEvent(name,desc,loc,dt,category, promotedValue,capacity )) {
-                Toast.makeText(CreateEventActivity.this, R.string.msg_kreiran_dogadjaj, Toast.LENGTH_SHORT).show();
-                finish();
-            } else {
-                Toast.makeText(CreateEventActivity.this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
-            }
+            new Thread(() -> {
+                try {
+                    HTTPHelper helper = new HTTPHelper();
+                    JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/events", eventJSON);
+
+                    if (response != null && response.has("_id")) {
+                        if (repo.insertEvent(name, desc, loc, dt, category, promotedValue, finalCapacity)) {
+                            runOnUiThread(() -> {
+                                Toast.makeText(this, R.string.msg_kreiran_dogadjaj, Toast.LENGTH_SHORT).show();
+                                finish();
+                            });
+                        } else {
+                            runOnUiThread(() -> Toast.makeText(this, R.string.msg_dberror, Toast.LENGTH_SHORT).show());
+                        }
+                    } else {
+                        runOnUiThread(() -> Toast.makeText(this, R.string.server, Toast.LENGTH_SHORT).show());
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    runOnUiThread(() -> Toast.makeText(this, R.string.err_server, Toast.LENGTH_SHORT).show());
+                }
+            }).start();
         }
     }
 
@@ -163,7 +187,7 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
             trimmed = trimmed.replace(". ", " ");
         }
 
-        SimpleDateFormat date = new SimpleDateFormat("d.M.yyyy HH:mm", Locale.getDefault());
+        SimpleDateFormat date = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
         date.setLenient(false);
 
         try {
@@ -180,6 +204,4 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
             return false;
         }
     }
-
-
 }

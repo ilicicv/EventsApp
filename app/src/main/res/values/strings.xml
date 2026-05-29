@@ -10,7 +10,6 @@
     <string name="events">events</string>
     <string name="my_events">my events</string>
     <string name="friends">friends</string>
-
     <string name="interested_events">interested events</string>
     <string name="attending_events">attending events</string>
     <string name="my_profile">my profile</string>
@@ -21,10 +20,8 @@
     <string name="current_password">Current password</string>
     <string name="new_password">New password</string>
     <string name="save">save</string>
-    <string name="errorLogin">Invalid username or password!</string>
-    <string name="errorRegister">Required field!</string>
-    <string name="passwordChanged">Password changed successfully!</string>
-    <string name="samePass">New password can\'t be the same as old!</string>
+    <string name="errorLogin">Netačan username/password!</string>
+    <string name="errorRegister">Popunite sva polja!</string>
     <string name="interested_events_text">Interested Events</string>
     <string name="attending_events_text">Attending Events</string>
 
@@ -43,6 +40,7 @@
     <string name="description">Description</string>
     <string name="interested">Interested</string>
     <string name="attending">Attending</string>
+
     <string name="jo_uvek_nema_ocena">Još uvek nema ocena</string>
     <string name="prose_na_ocena_0_0_0_ocena">Prosečna ocena: %1$.1f (%2$d ocena)</string>
     <string name="slobodnih_mesta_x_y">Slobodnih mesta: %1$d/%2$d</string>
@@ -68,20 +66,25 @@
     <string name="msg_kreiran_dogadjaj">Događaj uspešno kreiran.</string>
     <string name="msg_format_datuma">Datum mora biti u formatu: dan.mesec.godina. sat:minut</string>
     <string name="msg_vec_dodat">Već ste dodali ovaj događaj u zainteresovane!</string>
-    <string name="msg_vec_attending">Već ste na listi učesnika!</string>
     <string name="msg_uklonjeno_zainteresovani">Uklonjeno iz zainteresovanih.</string>
     <string name="msg_otkazano">Otkazano prisustvo.</string>
     <string name="msg_prosao_dogadjaj">Ovaj događaj je završen i prijave nisu moguće.</string>
     <string name="msg_nema_slobodnih">Nema više slobodnih mesta!</string>
     <string name="msg_vec_prijavljen">Već ste se prijavili na ovaj događaj!</string>
-    <string name="msg_pass">Password must be at least 6 characters long!</string>
-    <string name="msg_user">Username is already taken!</string>
-    <string name="msg_mail">Email address is already registered!</string>
-    <string name="msg_dberror">Failed due to a database error.</string>
-    <string name="msg_wrongCurrPass">Incorrect current password!</string>
+    <string name="msg_pass">Lozinka mora imati bar 6 karaktera!</string>
+    <string name="msg_user">Korisničko ime već postoji!</string>
+    <string name="msg_mail">Email adresa je već registrovana!</string>
+    <string name="msg_dberror">Greška u bazi podataka.</string>
+    <string name="msg_wrongCurrPass">Pogrešna trenutna lozinka!</string>
     <string name="msg_ucitavanje_eventa">\"Greška pri čitanju događaja: \"</string>
     <string name="msg_prosao_datum">Datum je prošao! Izaberite budući datum!</string>
     <string name="registruj_admin">Registruj se kao administrator:</string>
+    <string name="server">Greška na serveru!</string>
+    <string name="samo_admin">Samo administratori mogu dodavati događaje!</string>
+    <string name="err_server_lozinka">Greška pri promeni lozinke!</string>
+    <string name="err_server">Server error</string>
+    <string name="lozinka_usp">Lozinka uspešno promenjena!</string>
+    <string name="nova_lozinka">Nova lozinka ne može biti ista kao stara</string>
 
     <string-array name="categories_array">
         <item>Party</item>
@@ -89,4 +92,5 @@
         <item>Stand-Up &amp; Theater</item> <item>Concert</item>
         <item>Exhibition</item>
     </string-array>
+
 </resources>

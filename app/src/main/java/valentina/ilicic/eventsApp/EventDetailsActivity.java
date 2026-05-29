@@ -1,23 +1,28 @@
 package valentina.ilicic.eventsApp;
 
 import androidx.appcompat.app.AppCompatActivity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import org.json.JSONObject;
 
 public class EventDetailsActivity extends AppCompatActivity implements View.OnClickListener {
     private String eventName;
     private Event event;
     private TextView txtCapacity;
-
     private DatabaseHelper dbHelper;
     private DatabaseRepository repo;
-    private String currentUser = "";
     private int userId = -1;
     private int eventId = -1;
+    private String mongoEventId;
+    private String mongoUserId;
+    String currentUser = "";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -27,15 +32,22 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         dbHelper = new DatabaseHelper(this);
         repo = new DatabaseRepository(dbHelper);
 
-        Bundle loginData = getIntent().getExtras();
-        if (loginData != null) {
-            currentUser = loginData.getString("username", "");
-        }
+        SharedPreferences prefs = getSharedPreferences("UserData", Context.MODE_PRIVATE);
+        currentUser = prefs.getString("username", "");
+        mongoUserId = prefs.getString("mongoUserId", "");
 
         eventName = getIntent().getStringExtra("event_name");
+        mongoEventId = getIntent().getStringExtra("mongoEventId");
         userId = repo.getUserIdByUsername(currentUser);
         event = repo.getEventByName(eventName);
         eventId = repo.getEventId(eventName);
+
+        Log.e("DEBUG_DETAILS", "Username iz SharedPreferences: " + currentUser);
+        Log.e("DEBUG_DETAILS", "Event Name: " + eventName);
+        Log.e("DEBUG_DETAILS", "Mongo Event ID: " + mongoEventId);
+        Log.e("DEBUG_DETAILS", "Mongo User ID: " + mongoUserId);
+        Log.e("DEBUG_DETAILS", "Local User ID (DB): " + userId);
+        Log.e("DEBUG_DETAILS", "Local Event ID (DB): " + eventId);
 
         ImageView imgEvent = findViewById(R.id.imageEvents);
         TextView txtName = findViewById(R.id.txtName);
@@ -43,8 +55,9 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         TextView txtLocation = findViewById(R.id.txtLocation);
         TextView txtDateTime = findViewById(R.id.txtDateTime);
         TextView txtDesc = findViewById(R.id.txtDesc);
-        txtCapacity = findViewById(R.id.txtCapacity);
         TextView txtRating = findViewById(R.id.txtRating);
+        txtCapacity = findViewById(R.id.txtCapacity);
+
         Button btnInterested = findViewById(R.id.btnInterested);
         Button btnAttending = findViewById(R.id.btnAttending);
 
@@ -82,7 +95,9 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
     public void onClick(View view) {
         int id = view.getId();
 
-        if (event == null || userId == -1 || eventId == -1) return;
+        if (event == null || userId == -1 || eventId == -1) {
+            return;
+        }
 
         if (event.isPast()) {
             Toast.makeText(this, R.string.msg_prosao_dogadjaj, Toast.LENGTH_SHORT).show();
@@ -90,46 +105,65 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         }
 
         if (id == R.id.btnInterested) {
-            int resInterested = repo.setInterested(userId, eventId);
+            new Thread(() -> {
+                try {
+                    JSONObject json = new JSONObject();
+                    json.put("userId", mongoUserId);
+                    json.put("eventId", mongoEventId);
+                    json.put("commitment", "ZAINTERESOVAN");
 
-            switch (resInterested) {
-                case 1:
-                    Toast.makeText(this, R.string.added_to_interested, Toast.LENGTH_SHORT).show();
-                    break;
-                case 0:
-                    Toast.makeText(this, R.string.msg_vec_dodat, Toast.LENGTH_SHORT).show();
-                    break;
-                case -1:
-                    Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
-                    break;
-                default:
-                    Toast.makeText(this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
-                    break;
-            }
+                    HTTPHelper helper = new HTTPHelper();
+                    JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/attendance", json);
+
+                    if (response != null) {
+                        runOnUiThread(() -> {
+                            int resInterested = repo.setInterested(userId, eventId);
+                            if (resInterested == 1) {
+                                Toast.makeText(this, R.string.added_to_interested, Toast.LENGTH_SHORT).show();
+                            } else if (resInterested == 0) {
+                                Toast.makeText(this, R.string.msg_vec_dodat, Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
 
         } else if (id == R.id.btnAttending) {
-            int resAttending = repo.setAttending(userId, eventId, event.isPromoted(), event.getCapacity(), event.getAttendingCount());
+            new Thread(() -> {
+                try {
+                    JSONObject json = new JSONObject();
+                    json.put("userId", mongoUserId);
+                    json.put("eventId", mongoEventId);
+                    json.put("commitment", "PRISUSTVUJE");
 
-            switch (resAttending) {
-                case 1:
-                    Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
+                    HTTPHelper helper = new HTTPHelper();
+                    JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/attendance", json);
 
-                    if (event.isPromoted()) {
-                        event.setAttendingCount(event.getAttendingCount() + 1);
-                        int newFreeSeats = event.getCapacity() - event.getAttendingCount();
-                        txtCapacity.setText(getString(R.string.slobodnih_mesta_x_y, newFreeSeats, event.getCapacity()));
+                    if (response != null) {
+                        runOnUiThread(() -> {
+                            int resAttending = repo.setAttending(userId, eventId, event.isPromoted(), event.getCapacity(), event.getAttendingCount());
+
+                            if (resAttending == 1) {
+                                Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
+                                if (event.isPromoted()) {
+                                    event.setAttendingCount(event.getAttendingCount() + 1);
+                                    int newFreeSeats = event.getCapacity() - event.getAttendingCount();
+                                    txtCapacity.setText(getString(R.string.slobodnih_mesta_x_y, newFreeSeats, event.getCapacity()));
+                                }
+                            } else if (resAttending == 0) {
+                                Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
+                            } else if (resAttending == -1) {
+                                Toast.makeText(this, R.string.msg_nema_slobodnih, Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     }
-                    break;
-                case 0:
-                    Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
-                    break;
-                case -1:
-                    Toast.makeText(this, R.string.msg_nema_slobodnih, Toast.LENGTH_SHORT).show();
-                    break;
-                default:
-                    Toast.makeText(this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
-                    break;
-            }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
     }
+
 }

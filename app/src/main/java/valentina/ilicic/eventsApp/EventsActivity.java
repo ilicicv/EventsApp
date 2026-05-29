@@ -2,6 +2,7 @@ package valentina.ilicic.eventsApp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -22,24 +23,15 @@ public class EventsActivity extends AppCompatActivity implements View.OnClickLis
         btnEvents = findViewById(R.id.btnEvents);
         btnMyEvents = findViewById(R.id.btnMyEvents);
         btnFriends = findViewById(R.id.btnFriends);
-
         textUsername = findViewById(R.id.textUsername);
 
         eventsFragm = new EventsFragment();
         myEventsFragm = new MyEventsFragment();
 
-        Bundle user = getIntent().getExtras();
-        boolean isAdmin = false;
+        SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
+        String username = prefs.getString("username", "Korisnik");
 
-        if(user != null){
-            String username = user.getString("username");
-            textUsername.setText(username);
-            isAdmin = user.getBoolean("isAdmin", false);
-        }
-
-        Bundle adminInfo = new Bundle();
-        adminInfo.putBoolean("isAdmin", isAdmin);
-        eventsFragm.setArguments(adminInfo);
+        textUsername.setText(username);
 
         btnEvents.setOnClickListener(this);
         btnMyEvents.setOnClickListener(this);

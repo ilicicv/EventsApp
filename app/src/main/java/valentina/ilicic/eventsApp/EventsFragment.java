@@ -1,6 +1,8 @@
 package valentina.ilicic.eventsApp;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
@@ -9,60 +11,41 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
-
+import android.widget.Toast;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class EventsFragment extends Fragment implements View.OnClickListener, AdapterView.OnItemClickListener {
-
     private ListView list;
     private EventAdapter adapter;
     private Button btnAddEvent, btnFilterAll, btnFilterParty, btnFilterFestival, btnFilterTheater, btnFilterConcert, btnFilterExhibition;
-
     private DatabaseHelper dbHelper;
     private DatabaseRepository repo;
-    private String currentUser = "";
+    private String currentCategoryFilter = null;
+    public static HashMap<String, String> eventIdMap = new HashMap<>();
 
-    public EventsFragment() {
-    }
+    public EventsFragment() {}
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_events, container, false);
 
         dbHelper = new DatabaseHelper(getActivity());
         repo = new DatabaseRepository(dbHelper);
 
-        if (getActivity() != null) {
-            TextView textUsername = getActivity().findViewById(R.id.textUsername);
-            if (textUsername != null) {
-                currentUser = textUsername.getText().toString();
-            }
-        }
+        SharedPreferences prefs = getActivity().getSharedPreferences("UserData", Context.MODE_PRIVATE);
+        String user = prefs.getString("username", "");
+        boolean isAdmin = prefs.getBoolean("isAdmin", false);
 
         list = view.findViewById(R.id.listEvents);
         list.setEmptyView(view.findViewById(R.id.txtNoEvents));
 
-        adapter = new EventAdapter(getActivity(), R.layout.list_row, currentUser);
-
-        ArrayList<Event> allEventsFromDb = repo.getAllEventsList();
-        adapter.setEvents(allEventsFromDb);
+        adapter = new EventAdapter(getActivity(), R.layout.list_row, user);
         list.setAdapter(adapter);
 
         btnAddEvent = view.findViewById(R.id.btnAddEvent);
-
-        boolean isAdmin = false;
-        if (getArguments() != null) {
-            isAdmin = getArguments().getBoolean("isAdmin", false);
-        }
-
-        if (isAdmin) {
-            btnAddEvent.setVisibility(View.VISIBLE);
-        } else {
-            btnAddEvent.setVisibility(View.GONE);
-        }
-
         btnFilterAll = view.findViewById(R.id.btnFilterAll);
         btnFilterParty = view.findViewById(R.id.btnFilterParty);
         btnFilterFestival = view.findViewById(R.id.btnFilterFestival);
@@ -70,68 +53,126 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
         btnFilterConcert = view.findViewById(R.id.btnFilterConcert);
         btnFilterExhibition = view.findViewById(R.id.btnFilterExhibition);
 
-        btnAddEvent.setOnClickListener(this);
         btnFilterAll.setOnClickListener(this);
         btnFilterParty.setOnClickListener(this);
         btnFilterFestival.setOnClickListener(this);
         btnFilterTheater.setOnClickListener(this);
         btnFilterConcert.setOnClickListener(this);
         btnFilterExhibition.setOnClickListener(this);
-
         list.setOnItemClickListener(this);
 
-        btnFilterAll.setBackgroundColor(getContext().getColor(R.color.purple_500));
+        if (isAdmin) {
+            btnAddEvent.setVisibility(View.VISIBLE);
+            btnAddEvent.setOnClickListener(this);
+        } else {
+            btnAddEvent.setVisibility(View.GONE);
+        }
+
+        updateButtonColors(btnFilterAll);
+        loadEvents(null);
+        syncEventsWithServer(null);
 
         return view;
     }
 
     @Override
     public void onClick(View view) {
+        boolean isAdmin = getActivity().getSharedPreferences("UserData", Context.MODE_PRIVATE)
+                .getBoolean("isAdmin", false);
+
         if (view.getId() == R.id.btnAddEvent) {
-            Intent intent = new Intent(getActivity(), CreateEventActivity.class);
-            startActivity(intent);
-        }
-        else if (view instanceof Button) {
-            Button b = (Button) view;
-
-            btnFilterAll.setBackgroundColor(getContext().getColor(R.color.grey));
-            btnFilterParty.setBackgroundColor(getContext().getColor(R.color.grey));
-            btnFilterFestival.setBackgroundColor(getContext().getColor(R.color.grey));
-            btnFilterTheater.setBackgroundColor(getContext().getColor(R.color.grey));
-            btnFilterConcert.setBackgroundColor(getContext().getColor(R.color.grey));
-            btnFilterExhibition.setBackgroundColor(getContext().getColor(R.color.grey));
-
-            b.setBackgroundColor(getContext().getColor(R.color.purple_500));
-
-            String category = b.getText().toString();
-
-            if (category.equalsIgnoreCase(getString(R.string.sve)) || category.equalsIgnoreCase("Sve")) {
-                adapter.setEvents(repo.getAllEventsList());
+            if (isAdmin) {
+                startActivity(new Intent(getActivity(), CreateEventActivity.class));
             } else {
-                adapter.setEvents(repo.getEventsByCategoryList(category));
+                Toast.makeText(getActivity(), R.string.samo_admin, Toast.LENGTH_SHORT).show();
             }
+        } else if (view instanceof Button) {
+            updateButtonColors(view);
+            Button b = (Button) view;
+            String category = b.getText().toString();
+            currentCategoryFilter = (category.equalsIgnoreCase(getString(R.string.sve)) || category.equalsIgnoreCase("Sve")) ? null : category;
+
+            loadEvents(currentCategoryFilter);
+            syncEventsWithServer(currentCategoryFilter);
         }
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-        Event selectedEvent = (Event) adapter.getItem(i);
+    private void loadEvents(String category) {
+        if (category == null) adapter.setEvents(new ArrayList<>(repo.getAllEventsList()));
+        else adapter.setEvents(new ArrayList<>(repo.getEventsByCategoryList(category)));
+        adapter.notifyDataSetChanged();
+    }
 
-        if (selectedEvent != null) {
-            Intent intent = new Intent(getActivity(), EventDetailsActivity.class);
-            intent.putExtra("event_name", selectedEvent.getName());
-            intent.putExtra("username", currentUser);
-            startActivity(intent);
-        }
+    private void syncEventsWithServer(String category) {
+        String route = (category == null) ? "/events" : "/events/" + category;
+
+        new Thread(() -> {
+            try {
+                HTTPHelper helper = new HTTPHelper();
+                JSONArray array = helper.getJSONArrayFromURL(HTTPHelper.BASE_URL + route);
+
+                if (array != null) {
+                    if (category == null) {
+                        repo.deleteAllEvents();
+                        eventIdMap.clear();
+                    }
+
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject obj = array.getJSONObject(i);
+                        String name = obj.getString("name");
+                        String mongoId = obj.getString("_id");
+                        eventIdMap.put(name, mongoId);
+
+                        if (!repo.eventExists(name)) {
+                            repo.insertEvent(name,
+                                    obj.getString("description"),
+                                    obj.getString("location"),
+                                    obj.getString("eventTime"),
+                                    obj.getString("category"),
+                                    obj.getBoolean("promoted") ? 1 : 0,
+                                    obj.getInt("capacity"));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> loadEvents(currentCategoryFilter));
+                }
+            }
+        }).start();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (dbHelper != null && adapter != null) {
-            ArrayList<Event> refreshedList = repo.getAllEventsList();
-            adapter.setUsername(currentUser);
-            adapter.setEvents(refreshedList);
+        loadEvents(currentCategoryFilter);
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+        Event selectedEvent = (Event) adapter.getItem(i);
+        if (selectedEvent != null) {
+            String user = getActivity().getSharedPreferences("UserData", Context.MODE_PRIVATE)
+                    .getString("username", "");
+
+            String mongoEventId = eventIdMap.get(selectedEvent.getName());
+
+            Intent intent = new Intent(getActivity(), EventDetailsActivity.class);
+            intent.putExtra("event_name", selectedEvent.getName());
+            intent.putExtra("mongoEventId", mongoEventId);
+            startActivity(intent);
         }
+    }
+
+    private void updateButtonColors(View selectedView) {
+        Button[] buttons = {btnFilterAll, btnFilterParty, btnFilterFestival, btnFilterTheater, btnFilterConcert, btnFilterExhibition};
+
+        for (Button b : buttons)
+            b.setBackgroundColor(getContext().getColor(R.color.grey));
+
+        if (selectedView instanceof Button)
+            selectedView.setBackgroundColor(getContext().getColor(R.color.purple_500));
     }
 }

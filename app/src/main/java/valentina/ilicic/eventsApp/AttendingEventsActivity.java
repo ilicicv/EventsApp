@@ -32,10 +32,8 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
         dbHelper = new DatabaseHelper(this);
         repo = new DatabaseRepository(dbHelper);
 
-        Bundle loginData = getIntent().getExtras();
-        if (loginData != null) {
-            currentUsername = loginData.getString("username", "");
-        }
+        currentUsername = getSharedPreferences("UserData", MODE_PRIVATE)
+                .getString("username", "");
         userId = repo.getUserIdByUsername(currentUsername);
 
         empty = findViewById(R.id.txtNoAttendingEvents);

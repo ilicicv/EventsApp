@@ -154,6 +154,23 @@ public class EventsTable implements DatabaseTable {
         return -1;
     }
 
+    public boolean eventExists(SQLiteDatabase db, String naziv) {
+        Cursor cursor = null;
+        try {
+            cursor = db.query(TABLE_NAME, new String[]{COL_ID}, COL_NAZIV + " = ?", new String[]{naziv}, null, null, null);
+            return cursor != null && cursor.getCount() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+    }
+
+    public void deleteAllEvents(SQLiteDatabase db) {
+        db.delete(TABLE_NAME, null, null);
+    }
+
     private Event mapCursorToEvent(Cursor cursor) {
         String naziv = cursor.getString(cursor.getColumnIndexOrThrow(COL_NAZIV));
         String opis = cursor.getString(cursor.getColumnIndexOrThrow(COL_OPIS));

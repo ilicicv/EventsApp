@@ -30,10 +30,8 @@ public class InterestedEventsActivity extends AppCompatActivity implements Adapt
         dbHelper = new DatabaseHelper(this);
         repo = new DatabaseRepository(dbHelper);
 
-        Bundle loginData = getIntent().getExtras();
-        if (loginData != null) {
-            currentUsername = loginData.getString("username", "");
-        }
+        currentUsername = getSharedPreferences("UserData", MODE_PRIVATE)
+                .getString("username", "");
 
         empty = findViewById(R.id.txtNoInterestedEvents);
         listInterested = findViewById(R.id.listInterestedEvents);

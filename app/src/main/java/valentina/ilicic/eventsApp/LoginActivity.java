@@ -1,7 +1,6 @@
 package valentina.ilicic.eventsApp;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -9,6 +8,10 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -57,75 +60,112 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         if (id == R.id.btnLogin) {
             layoutLogin.setVisibility(View.VISIBLE);
             layoutStart.setVisibility(View.GONE);
-        }
-        else if (id == R.id.btnRegister) {
+        } else if (id == R.id.btnRegister) {
             layoutRegister.setVisibility(View.VISIBLE);
             layoutStart.setVisibility(View.GONE);
+        } else if (id == R.id.btnLoginForm) {
+            login();
+        } else if (id == R.id.btnRegisterForm) {
+            register();
         }
-        else if (id == R.id.btnLoginForm) {
-            String user = editUsername.getText().toString().trim();
-            String pass = editPassword.getText().toString().trim();
+    }
 
-            if (user.isEmpty() || pass.isEmpty()) {
-                editUsername.setError(getString(R.string.errorLogin));
-                return;
-            }
+    private void login() {
+        String user = editUsername.getText().toString().trim();
+        String pass = editPassword.getText().toString().trim();
 
-            int adminStatus = repo.loginUser(user, pass);
-
-            if (adminStatus != -1) {
-                Intent intent = new Intent(this, EventsActivity.class);
-                Bundle login = new Bundle();
-                login.putString("username", user);
-                login.putBoolean("isAdmin", adminStatus == 1);
-                intent.putExtras(login);
-                startActivity(intent);
-            } else {
-                editUsername.setError(getString(R.string.errorLogin));
-            }
-
+        if (user.isEmpty() || pass.isEmpty()) {
+            editUsername.setError(getString(R.string.errorLogin));
+            return;
         }
-        else if (id == R.id.btnRegisterForm) {
-            String user = editUsernameReg.getText().toString().trim();
-            String pass = editPasswordReg.getText().toString().trim();
-            String email = editEmailReg.getText().toString().trim();
 
-            boolean isUserAdmin = isAdmin.isChecked();
+        JSONObject loginJson = new JSONObject();
+        try {
+            loginJson.put("username", user);
+            loginJson.put("password", pass);
+        } catch (JSONException e) { e.printStackTrace(); }
 
-            if (user.isEmpty() || email.isEmpty() || pass.isEmpty()) {
-                editUsernameReg.setError(getString(R.string.errorRegister));
-            } else if (pass.length() < 6){
-                editPasswordReg.setError(getString(R.string.msg_pass));
-            } else {
-                if (repo.checkUsername(user)) {
-                    editUsernameReg.setError(getString(R.string.msg_user));
-                    return;
-                }
+        new Thread(() -> {
+            try {
+                HTTPHelper helper = new HTTPHelper();
+                JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/login", loginJson);
 
-                if (repo.checkEmail(email)) {
-                    editEmailReg.setError(getString(R.string.msg_mail));
-                    return;
-                }
+                if (response != null && response.has("username")) {
+                    boolean isAdminStatus = response.optBoolean("isAdmin", false);
+                    String mongoUserId = response.optString("_id", "");
 
-                if (repo.registerUser(user, email, pass, isUserAdmin)) {
-                    Intent intent = new Intent(this, EventsActivity.class);
-                    Bundle register = new Bundle();
-                    register.putString("username", user);
-                    register.putString("email", email);
-                    register.putBoolean("isAdmin", isUserAdmin);
-                    intent.putExtras(register);
-                    startActivity(intent);
+                    if (repo.getUserIdByUsername(user) == -1) {
+                        repo.registerUser(user, response.optString("email", ""), pass, isAdminStatus);
+                    }
+
+                    getSharedPreferences("UserData", MODE_PRIVATE).edit()
+                            .putString("username", user)
+                            .putBoolean("isAdmin", isAdminStatus)
+                            .putString("mongoUserId", mongoUserId)
+                            .apply();
+
+                    runOnUiThread(() -> {
+                        startActivity(new Intent(this, EventsActivity.class));
+                        finish();
+                    });
                 } else {
-                    editUsernameReg.setError(getString(R.string.msg_dberror));
+                    runOnUiThread(() -> editUsername.setError(getString(R.string.errorLogin)));
                 }
-            }
+            } catch (Exception e) { e.printStackTrace(); }
+        }).start();
+    }
+
+    private void register() {
+        String user = editUsernameReg.getText().toString().trim();
+        String pass = editPasswordReg.getText().toString().trim();
+        String email = editEmailReg.getText().toString().trim();
+        boolean isUserAdmin = isAdmin.isChecked();
+
+        if (user.isEmpty() || email.isEmpty() || pass.isEmpty()) {
+            editUsernameReg.setError(getString(R.string.errorRegister));
+            return;
         }
+
+        JSONObject regJson = new JSONObject();
+        try {
+            regJson.put("username", user);
+            regJson.put("email", email);
+            regJson.put("password", pass);
+            regJson.put("isAdmin", isUserAdmin ? 1 : 0);
+        } catch (JSONException e) { e.printStackTrace(); }
+
+        new Thread(() -> {
+            try {
+                HTTPHelper helper = new HTTPHelper();
+                JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/users", regJson);
+
+                if (response != null && response.has("_id")) {
+                    repo.registerUser(user, email, pass, isUserAdmin);
+
+                    String mongoUserId = response.optString("_id", "");
+
+                    getSharedPreferences("UserData", MODE_PRIVATE).edit()
+                            .putString("username", user)
+                            .putBoolean("isAdmin", isUserAdmin)
+                            .putString("mongoUserId", mongoUserId)
+                            .apply();
+
+                    runOnUiThread(() -> {
+                        startActivity(new Intent(this, EventsActivity.class));
+                        finish();
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        Toast.makeText(LoginActivity.this, R.string.msg_user, Toast.LENGTH_SHORT).show();
+                    });
+                }
+            } catch (Exception e) { e.printStackTrace(); }
+        }).start();
     }
 
     @Override
     public void onBackPressed() {
         if (layoutLogin.getVisibility() == View.VISIBLE || layoutRegister.getVisibility() == View.VISIBLE) {
-
             layoutLogin.setVisibility(View.GONE);
             layoutRegister.setVisibility(View.GONE);
             layoutStart.setVisibility(View.VISIBLE);
