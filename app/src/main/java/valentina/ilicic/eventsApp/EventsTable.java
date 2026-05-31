@@ -17,6 +17,7 @@ public class EventsTable implements DatabaseTable {
     public static final String TABLE_NAME = "events";
 
     public static final String COL_ID = "id";
+    public static final String COL_MONGO_ID = "mongo_id";
     public static final String COL_NAZIV = "naziv";
     public static final String COL_OPIS = "opis";
     public static final String COL_LOKACIJA = "lokacija";
@@ -33,6 +34,7 @@ public class EventsTable implements DatabaseTable {
     public void createTable(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE " + TABLE_NAME + " (" +
                 COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                COL_MONGO_ID + " TEXT UNIQUE, " +
                 COL_NAZIV + " TEXT NOT NULL, " +
                 COL_OPIS + " TEXT, " +
                 COL_LOKACIJA + " TEXT NOT NULL, " +
@@ -57,11 +59,12 @@ public class EventsTable implements DatabaseTable {
         this.context = context;
     }
 
-    public boolean insertEvent(SQLiteDatabase db, String naziv, String opis, String lokacija,
+    public boolean insertEvent(SQLiteDatabase db, String mongoEventId, String naziv, String opis, String lokacija,
                                String datum, String kat, int promoted, int kapacitet) {
         try {
             ContentValues values = new ContentValues();
             values.put(COL_NAZIV, naziv);
+            values.put(COL_MONGO_ID, mongoEventId);
             values.put(COL_OPIS, opis);
             values.put(COL_LOKACIJA, lokacija);
             values.put(COL_DATUM_VREME, datum);
@@ -139,7 +142,7 @@ public class EventsTable implements DatabaseTable {
         return null;
     }
 
-    public int getEventId(SQLiteDatabase db, String eventName) {
+    public int getLocalEventId(SQLiteDatabase db, String eventName) {
         Cursor cursor = null;
         try {
             cursor = db.query(TABLE_NAME, new String[]{COL_ID}, COL_NAZIV + " = ?", new String[]{eventName}, null, null, null);
@@ -152,6 +155,21 @@ public class EventsTable implements DatabaseTable {
             if (cursor != null) cursor.close();
         }
         return -1;
+    }
+
+    public String getMongoEventId(SQLiteDatabase db, String naziv) {
+        Cursor cursor = null;
+        try {
+            cursor = db.query(TABLE_NAME, new String[]{COL_MONGO_ID}, COL_NAZIV + " = ?", new String[]{naziv}, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                return cursor.getString(0);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return null;
     }
 
     public boolean eventExists(SQLiteDatabase db, String naziv) {
@@ -200,7 +218,7 @@ public class EventsTable implements DatabaseTable {
         if (list == null || list.size() <= 1) return;
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
-
+        sdf.setLenient(true);
         Collections.sort(list, new Comparator<Event>() {
             @Override
             public int compare(Event e1, Event e2) {

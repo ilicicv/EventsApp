@@ -99,41 +99,4 @@ public class HTTPHelper {
         urlConnection.disconnect();
         return null;
     }
-
-    public boolean httpDelete(String urlString) throws IOException, JSONException {
-        HttpURLConnection urlConnection = null;
-        java.net.URL url = new java.net.URL(urlString);
-        urlConnection = (HttpURLConnection) url.openConnection();
-        urlConnection.setRequestMethod("DELETE");
-        urlConnection.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
-        urlConnection.setRequestProperty("Accept", "application/json");
-        try {
-            urlConnection.connect();
-        } catch (IOException e) {
-            return false;
-        }
-        int responseCode = urlConnection.getResponseCode();
-        Log.i("STATUS", String.valueOf(responseCode));
-        Log.i("MSG", urlConnection.getResponseMessage());
-        urlConnection.disconnect();
-        return responseCode == HttpURLConnection.HTTP_OK;
-    }
-
-    public String getMongoIdByName(String name) {
-        try {
-            JSONArray array = getJSONArrayFromURL(BASE_URL + "/events");
-
-            if (array != null) {
-                for (int i = 0; i < array.length(); i++) {
-                    JSONObject obj = array.getJSONObject(i);
-                    if (obj.getString("name").equals(name)) {
-                        return obj.getString("_id");
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 }

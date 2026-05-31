@@ -117,15 +117,19 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
                         String name = obj.getString("name");
+                        String mongoId = obj.getString("_id");
 
                         if (!repo.eventExists(name)) {
-                            repo.insertEvent(name,
+                            repo.insertEvent(
+                                    mongoId,
+                                    name,
                                     obj.getString("description"),
                                     obj.getString("location"),
                                     obj.getString("eventTime"),
                                     obj.getString("category"),
                                     obj.getBoolean("promoted") ? 1 : 0,
-                                    obj.getInt("capacity"));
+                                    obj.getInt("capacity")
+                            );
                         }
                     }
                 }

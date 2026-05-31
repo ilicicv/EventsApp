@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 public class UsersTable implements DatabaseTable{
     public static final String TABLE_NAME = "users";
     public static final String COL_ID = "id";
+    public static final String COL_MONGO_ID = "mongo_id";
     public static final String COL_USERNAME = "username";
     public static final String COL_EMAIL = "email";
     public static final String COL_LOZINKA = "lozinka";
@@ -18,6 +19,7 @@ public class UsersTable implements DatabaseTable{
     public void createTable(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE " + TABLE_NAME + " (" +
                 COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                COL_MONGO_ID + " TEXT, " +
                 COL_USERNAME + " TEXT UNIQUE NOT NULL, " +
                 COL_EMAIL + " TEXT UNIQUE NOT NULL, " +
                 COL_LOZINKA + " TEXT NOT NULL, " +
@@ -28,19 +30,17 @@ public class UsersTable implements DatabaseTable{
     public String getTableName() {
         return TABLE_NAME;
     }
-
     public UsersTable(Context context) {
         this.context = context;
     }
 
-    public boolean registerUser(SQLiteDatabase db, String username, String email, String password, boolean isAdmin) {
+    public boolean registerUser(SQLiteDatabase db, String username, String email, String password, boolean isAdmin, String mongoId) {
         try {
             ContentValues values = new ContentValues();
             values.put(COL_USERNAME, username);
             values.put(COL_EMAIL, email);
-
-            String hashedPassword = PasswordHasher.hashPassword(password);
-            values.put(COL_LOZINKA, hashedPassword);
+            values.put(COL_MONGO_ID, mongoId);
+            values.put(COL_LOZINKA, PasswordHasher.hashPassword(password));
             values.put(COL_IS_ADMIN, isAdmin ? 1 : 0);
 
             long insertUser = db.insert(TABLE_NAME, null, values);
@@ -74,33 +74,32 @@ public class UsersTable implements DatabaseTable{
         }
     }
 
-    public int loginUser(SQLiteDatabase db, String username, String enteredPassword) {
+    public int loginUser(SQLiteDatabase db, String username, String enteredPassword, String mongoIdFromServer) {
         Cursor cursor = null;
         try {
-
-            cursor = db.query(
-                    TABLE_NAME,
-                    new String[]{COL_LOZINKA, COL_IS_ADMIN},
-                    COL_USERNAME + " = ?",
-                    new String[]{username},
-                    null, null, null
-            );
+            cursor = db.query(TABLE_NAME, new String[]{COL_LOZINKA, COL_IS_ADMIN, COL_MONGO_ID},
+                    COL_USERNAME + " = ?", new String[]{username},null, null, null);
 
             if (cursor != null && cursor.moveToFirst()) {
                 String storedHashedPassword = cursor.getString(0);
                 int isAdmin = cursor.getInt(1);
 
                 if (PasswordHasher.verifyPassword(enteredPassword, storedHashedPassword)) {
-                    return isAdmin; // 1 admin, 0 običan korisnik
+                    // Ako ID iz servera nije isti kao lokalni azurira ga
+                    String storedMongoId = cursor.getString(2);
+                    if (!mongoIdFromServer.equals(storedMongoId)) {
+                        ContentValues values = new ContentValues();
+                        values.put(COL_MONGO_ID, mongoIdFromServer);
+                        db.update(TABLE_NAME, values, COL_USERNAME + " = ?", new String[]{username});
+                    }
+                    return isAdmin;
                 }
             }
             return -1;
         } catch (Exception e) {
             return -1;
         } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
+            if (cursor != null) cursor.close();
         }
     }
 
@@ -121,7 +120,7 @@ public class UsersTable implements DatabaseTable{
         }
     }
 
-    public int getUserIdByUsername(SQLiteDatabase db, String username) {
+    public int getLocalUserId(SQLiteDatabase db, String username) {
         Cursor cursor = null;
         try {
             cursor = db.query(TABLE_NAME, new String[]{COL_ID},  COL_USERNAME + " = ?", new String[]{username},
@@ -137,5 +136,19 @@ public class UsersTable implements DatabaseTable{
         } finally {
             if (cursor != null) cursor.close();
         }
+    }
+
+    public String getMongoUserId(SQLiteDatabase db, String username) {
+        Cursor cursor = null;
+        try {
+            cursor = db.query(TABLE_NAME, new String[]{COL_MONGO_ID}, COL_USERNAME + " = ?",
+                    new String[]{username}, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                return cursor.getString(cursor.getColumnIndexOrThrow(COL_MONGO_ID));
+            }
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return null;
     }
 }

@@ -2,6 +2,7 @@ package valentina.ilicic.eventsApp;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -9,10 +10,11 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import org.json.JSONArray;
+import org.json.JSONObject;
 import java.util.ArrayList;
 
-public class AttendingEventsActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
+public class AttendingEventsActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
 
     private ListView listUpcoming, listPast;
     private TextView empty;
@@ -22,6 +24,7 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
     private DatabaseHelper dbHelper;
     private DatabaseRepository repo;
     private String currentUsername = "";
+    private String mongoUserId = "";
     private int userId = -1;
 
     @Override
@@ -32,9 +35,10 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
         dbHelper = new DatabaseHelper(this);
         repo = new DatabaseRepository(dbHelper);
 
-        currentUsername = getSharedPreferences("UserData", MODE_PRIVATE)
-                .getString("username", "");
-        userId = repo.getUserIdByUsername(currentUsername);
+        SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
+        currentUsername = prefs.getString("username", "");
+        mongoUserId = prefs.getString("mongoUserId", "");
+        userId = repo.getLocalUserId(currentUsername);
 
         empty = findViewById(R.id.txtNoAttendingEvents);
         listUpcoming = findViewById(R.id.listUpcoming);
@@ -49,18 +53,59 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
         listPast.setAdapter(adapterPast);
 
         listUpcoming.setOnItemClickListener(this);
-        listUpcoming.setOnItemLongClickListener(this);
         listPast.setOnItemClickListener(this);
 
         loadData();
     }
 
     private void loadData() {
-        if (userId == -1) return;
+        if (mongoUserId == null || mongoUserId.isEmpty()) return;
 
-        ArrayList<Event> allEvents = repo.getAttendingEvents(userId);
+        new Thread(() -> {
+            ArrayList<Event> upcomingList = new ArrayList<>();
+            ArrayList<Event> pastList = new ArrayList<>();
 
-        if (allEvents == null || allEvents.isEmpty()) {
+            try {
+                HTTPHelper helper = new HTTPHelper();
+                String url = HTTPHelper.BASE_URL + "/attendance/" + mongoUserId;
+                JSONArray array = helper.getJSONArrayFromURL(url);
+
+                if (array != null) {
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject obj = array.getJSONObject(i);
+                        String commitment = obj.optString("commitment", "");
+                        JSONObject e = obj.optJSONObject("event");
+
+                        if (e != null && "PRISUSTVUJE".equals(commitment)) {
+                            Event event = EventFactory.createRegularEvent(
+                                    e.optString("name", "Nepoznato"),
+                                    e.optString("description", ""),
+                                    e.optString("location", "Nema lokacije"),
+                                    e.optString("eventTime", ""),
+                                    e.optString("category", ""),
+                                    e.optInt("numberOfAttendees", 0),
+                                    e.optDouble("avgRating", 0.0),
+                                    e.optInt("numberOfRatings", 0)
+                            );
+
+                            if (event.isPast()) {
+                                pastList.add(event);
+                            } else {
+                                upcomingList.add(event);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            runOnUiThread(() -> updateUI(upcomingList, pastList));
+        }).start();
+    }
+
+    private void updateUI(ArrayList<Event> upcoming, ArrayList<Event> past) {
+        if (upcoming.isEmpty() && past.isEmpty()) {
             empty.setVisibility(View.VISIBLE);
             layoutUpcoming.setVisibility(View.GONE);
             layoutPast.setVisibility(View.GONE);
@@ -69,17 +114,6 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
             adapterPast.setEvents(new ArrayList<>());
         } else {
             empty.setVisibility(View.GONE);
-
-            ArrayList<Event> upcoming = new ArrayList<>();
-            ArrayList<Event> past = new ArrayList<>();
-
-            for (Event e : allEvents) {
-                if (e.isPast()) {
-                    past.add(e);
-                } else {
-                    upcoming.add(e);
-                }
-            }
 
             if (!upcoming.isEmpty()) {
                 layoutUpcoming.setVisibility(View.VISIBLE);
@@ -97,6 +131,8 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
                 adapterPast.setEvents(new ArrayList<>());
             }
         }
+        adapterUpcoming.notifyDataSetChanged();
+        adapterPast.notifyDataSetChanged();
     }
 
     @Override
@@ -111,24 +147,7 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
     }
 
     @Override
-    public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-        Event event = (Event) adapterView.getItemAtPosition(i);
-
-        if (event != null && userId != -1) {
-            boolean deleted = repo.removeAttending(userId, event.getName());
-
-            if (deleted) {
-                loadData();
-                Toast.makeText(this, R.string.msg_otkazano, Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
-            }
-        }
-        return true;
-    }
-
-
-    protected  void onResume(){
+    protected void onResume() {
         super.onResume();
         loadData();
     }

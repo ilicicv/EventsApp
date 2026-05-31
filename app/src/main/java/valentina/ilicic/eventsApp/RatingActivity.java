@@ -32,10 +32,10 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
         eventName = getIntent().getStringExtra("event_name");
 
         if (currentUser != null && !currentUser.isEmpty()) {
-            userId = repo.getUserIdByUsername(currentUser);
+            userId = repo.getLocalUserId(currentUser);
         }
         if (eventName != null && !eventName.isEmpty()) {
-            eventId = repo.getEventId(eventName);
+            eventId = repo.getLocalEventId(eventName);
         }
 
         TextView txtEventName = findViewById(R.id.txtName);
@@ -68,15 +68,10 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
                 Toast.makeText(RatingActivity.this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
             } else {
                 String mongoUserId = getSharedPreferences("UserData", MODE_PRIVATE).getString("mongoUserId", "");
+                String mongoEventId = repo.getMongoEventId(eventName);
 
                 new Thread(() -> {
                     HTTPHelper helper = new HTTPHelper();
-                    String mongoEventId = helper.getMongoIdByName(eventName);
-
-                    if (mongoEventId == null) {
-                        runOnUiThread(() -> Toast.makeText(RatingActivity.this, R.string.err_server, Toast.LENGTH_SHORT).show());
-                        return;
-                    }
 
                     try {
                         JSONObject ratingJson = new JSONObject();

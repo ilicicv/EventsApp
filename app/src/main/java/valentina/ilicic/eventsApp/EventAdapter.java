@@ -41,13 +41,13 @@ public class EventAdapter extends BaseAdapter {
         this.currentUser = currentUser;
         this.dbHelper = new DatabaseHelper(context);
         this.repo = new DatabaseRepository(dbHelper);
-        this.userId = repo.getUserIdByUsername(currentUser);
+        this.userId = repo.getLocalUserId(currentUser);
     }
 
     public void setUsername(String username) {
         this.currentUser = username;
         if (dbHelper != null) {
-            this.userId = repo.getUserIdByUsername(username);
+            this.userId = repo.getLocalUserId(username);
         }
         notifyDataSetChanged();
     }
@@ -151,7 +151,7 @@ public class EventAdapter extends BaseAdapter {
                 if (currentEvent.isPast()) {
                     vh.btnRate.setVisibility(View.VISIBLE);
 
-                    int eventId = repo.getEventId(currentEvent.getName());
+                    int eventId = repo.getLocalEventId(currentEvent.getName());
                     boolean rated = false;
                     if (userId != -1 && eventId != -1) {
                         rated = repo.eventRated(userId, eventId);

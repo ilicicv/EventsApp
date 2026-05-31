@@ -129,7 +129,9 @@ public class CreateEventActivity extends AppCompatActivity implements View.OnCli
                     JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/events", eventJSON);
 
                     if (response != null && response.has("_id")) {
-                        if (repo.insertEvent(name, desc, loc, dt, category, promotedValue, finalCapacity)) {
+                        String mongoEventId = response.getString("_id");
+
+                        if (repo.insertEvent(mongoEventId, name, desc, loc, dt, category, promotedValue, finalCapacity)) {
                             runOnUiThread(() -> {
                                 Toast.makeText(this, R.string.msg_kreiran_dogadjaj, Toast.LENGTH_SHORT).show();
                                 finish();

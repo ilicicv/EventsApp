@@ -11,11 +11,11 @@ public class DatabaseRepository {
     }
 
     // ---------------------------------- USERS TABLE  ---------------------------------------
-    public boolean registerUser(String username, String email, String password, boolean isAdmin) {
+    public boolean registerUser(String username, String email, String password, boolean isAdmin, String mongoId) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         try {
             if (dbHelper.getUsersTable() != null) {
-                return dbHelper.getUsersTable().registerUser(db, username, email, password, isAdmin);
+                return dbHelper.getUsersTable().registerUser(db, username, email, password, isAdmin, mongoId);
             }
             return false;
         } finally {
@@ -47,11 +47,11 @@ public class DatabaseRepository {
         }
     }
 
-    public int loginUser(String username, String password) {
+    public int loginUser(String username, String password, String mongoIdFromServer) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         try {
             if (dbHelper.getUsersTable() != null) {
-                return dbHelper.getUsersTable().loginUser(db, username, password);
+                return dbHelper.getUsersTable().loginUser(db, username, password, mongoIdFromServer);
             }
             return -1;
         } finally {
@@ -71,11 +71,11 @@ public class DatabaseRepository {
         }
     }
 
-    public int getUserIdByUsername(String username) {
+    public int getLocalUserId(String username) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         try {
             if (dbHelper.getUsersTable() != null) {
-                return dbHelper.getUsersTable().getUserIdByUsername(db, username);
+                return dbHelper.getUsersTable().getLocalUserId(db, username);
             }
             return -1;
         } finally {
@@ -83,14 +83,26 @@ public class DatabaseRepository {
         }
     }
 
+    public String getMongoUserId(String username) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        try {
+            if (dbHelper.getUsersTable() != null) {
+                return dbHelper.getUsersTable().getMongoUserId(db, username);
+            }
+            return null;
+        } finally {
+            db.close();
+        }
+    }
+
     // ---------------------------------- EVENTS TABLE  ---------------------------------------
 
-    public boolean insertEvent(String title, String description, String location,
+    public boolean insertEvent(String mongoEventId, String title, String description, String location,
                                String dateTime, String category, int promoted, int capacity) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         try {
             if (dbHelper.getEventsTable() != null) {
-                return dbHelper.getEventsTable().insertEvent(db, title, description, location, dateTime, category, promoted, capacity);
+                return dbHelper.getEventsTable().insertEvent(db, mongoEventId, title, description, location, dateTime, category, promoted, capacity);
             }
             return false;
         } finally {
@@ -134,13 +146,25 @@ public class DatabaseRepository {
         }
     }
 
-    public int getEventId(String eventName) {
+    public int getLocalEventId(String eventName) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         try {
             if (dbHelper.getEventsTable() != null) {
-                return dbHelper.getEventsTable().getEventId(db, eventName);
+                return dbHelper.getEventsTable().getLocalEventId(db, eventName);
             }
             return -1;
+        } finally {
+            db.close();
+        }
+    }
+
+    public String getMongoEventId(String eventName) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        try {
+            if (dbHelper.getEventsTable() != null) {
+                return dbHelper.getEventsTable().getMongoEventId(db, eventName);
+            }
+            return null;
         } finally {
             db.close();
         }

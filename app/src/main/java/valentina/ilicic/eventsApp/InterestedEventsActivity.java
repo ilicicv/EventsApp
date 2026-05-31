@@ -1,19 +1,19 @@
 package valentina.ilicic.eventsApp;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import org.json.JSONArray;
+import org.json.JSONObject;
 import java.util.ArrayList;
 
-
-public class InterestedEventsActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
+public class InterestedEventsActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
 
     private ListView listInterested;
     private TextView empty;
@@ -21,6 +21,8 @@ public class InterestedEventsActivity extends AppCompatActivity implements Adapt
     private DatabaseHelper dbHelper;
     private DatabaseRepository repo;
     private String currentUsername = "";
+    private String mongoUserId = "";
+    private int userId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,8 +32,10 @@ public class InterestedEventsActivity extends AppCompatActivity implements Adapt
         dbHelper = new DatabaseHelper(this);
         repo = new DatabaseRepository(dbHelper);
 
-        currentUsername = getSharedPreferences("UserData", MODE_PRIVATE)
-                .getString("username", "");
+        SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
+        currentUsername = prefs.getString("username", "");
+        mongoUserId = prefs.getString("mongoUserId", "");
+        userId = repo.getLocalUserId(currentUsername);
 
         empty = findViewById(R.id.txtNoInterestedEvents);
         listInterested = findViewById(R.id.listInterestedEvents);
@@ -41,26 +45,79 @@ public class InterestedEventsActivity extends AppCompatActivity implements Adapt
         listInterested.setAdapter(adapter);
 
         listInterested.setOnItemClickListener(this);
-        listInterested.setOnItemLongClickListener(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        refreshListFromDatabase();
+        fetchInterestedEventsFromServer(mongoUserId);
     }
 
-    private void refreshListFromDatabase() {
-        int userId = repo.getUserIdByUsername(currentUsername);
+    private void fetchInterestedEventsFromServer(String urlUserId) {
+        if (urlUserId == null || urlUserId.isEmpty()) return;
 
-        if (userId != -1) {
-            ArrayList<Event> interestedEvents = repo.getInterestedEvents(userId, "ZAINTERESOVAN");
-            adapter.setEvents(interestedEvents);
-        } else {
-            adapter.setEvents(new ArrayList<>());
-        }
-        adapter.notifyDataSetChanged();
+        new Thread(() -> {
+            ArrayList<Event> interestedEvents = new ArrayList<>();
+            try {
+                HTTPHelper helper = new HTTPHelper();
+                String url = HTTPHelper.BASE_URL + "/attendance/" + urlUserId;
+                JSONArray array = helper.getJSONArrayFromURL(url);
+
+                if (array != null) {
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject obj = array.getJSONObject(i);
+                        String commitment = obj.optString("commitment", "");
+
+                        if ("ZAINTERESOVAN".equals(commitment)) {
+                            JSONObject e = obj.optJSONObject("event");
+
+                            if (e != null) {
+                                boolean isPromoted = e.optBoolean("promoted", false);
+                                Event event;
+
+                                if (isPromoted) {
+                                    event = EventFactory.createPromotedEvent(
+                                            e.optString("name", "Nepoznato"),
+                                            e.optString("description", ""),
+                                            e.optString("location", "Nema lokacije"),
+                                            e.optString("eventTime", ""),
+                                            e.optString("category", ""),
+                                            e.optInt("capacity", 0),
+                                            e.optInt("numberOfAttendees", 0),
+                                            e.optDouble("avgRating", 0.0),
+                                            e.optInt("numberOfRatings", 0)
+                                    );
+                                } else {
+                                    event = EventFactory.createRegularEvent(
+                                            e.optString("name", "Nepoznato"),
+                                            e.optString("description", ""),
+                                            e.optString("location", "Nema lokacije"),
+                                            e.optString("eventTime", ""),
+                                            e.optString("category", ""),
+                                            e.optInt("numberOfAttendees", 0),
+                                            e.optDouble("avgRating", 0.0),
+                                            e.optInt("numberOfRatings", 0)
+                                    );
+                                }
+                                interestedEvents.add(event);
+                            }
+                        }
+                    }
+                }
+
+                EventsTable.sortEventsByPromotedAndDate(interestedEvents);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            runOnUiThread(() -> {
+                adapter.setEvents(interestedEvents);
+                adapter.notifyDataSetChanged();
+            });
+        }).start();
     }
+
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
         Event event = (Event) adapter.getItem(i);
@@ -76,27 +133,5 @@ public class InterestedEventsActivity extends AppCompatActivity implements Adapt
 
             startActivity(intent);
         }
-    }
-
-    @Override
-    public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-        Event event = (Event) adapter.getItem(i);
-
-        if (event != null) {
-            int userId = repo.getUserIdByUsername(currentUsername);
-            String eventName = event.getName();
-
-            if (userId != -1) {
-                boolean isRemoved = repo.removeInterested(userId, eventName);
-
-                if (isRemoved) {
-                    refreshListFromDatabase();
-                    Toast.makeText(this, R.string.msg_uklonjeno_zainteresovani, Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, R.string.msg_dberror, Toast.LENGTH_SHORT).show();
-                }
-            }
-        }
-        return true;
     }
 }

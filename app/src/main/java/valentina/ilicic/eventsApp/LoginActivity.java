@@ -94,8 +94,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     boolean isAdminStatus = response.optBoolean("isAdmin", false);
                     String mongoUserId = response.optString("_id", "");
 
-                    if (repo.getUserIdByUsername(user) == -1) {
-                        repo.registerUser(user, response.optString("email", ""), pass, isAdminStatus);
+                    if (repo.getLocalUserId(user) == -1) {
+                        repo.registerUser(user, response.optString("email", ""), pass, isAdminStatus, mongoUserId);
                     }
 
                     getSharedPreferences("UserData", MODE_PRIVATE).edit()
@@ -111,7 +111,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 } else {
                     runOnUiThread(() -> editUsername.setError(getString(R.string.errorLogin)));
                 }
-            } catch (Exception e) { e.printStackTrace(); }
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> {
+                    Toast.makeText(LoginActivity.this, R.string.err_server_konekc, Toast.LENGTH_LONG).show();
+                });            }
+
         }).start();
     }
 
@@ -140,9 +145,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/users", regJson);
 
                 if (response != null && response.has("_id")) {
-                    repo.registerUser(user, email, pass, isUserAdmin);
-
                     String mongoUserId = response.optString("_id", "");
+
+                    repo.registerUser(user, email, pass, isUserAdmin, mongoUserId);
 
                     getSharedPreferences("UserData", MODE_PRIVATE).edit()
                             .putString("username", user)
@@ -156,10 +161,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     });
                 } else {
                     runOnUiThread(() -> {
-                        Toast.makeText(LoginActivity.this, R.string.msg_user, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LoginActivity.this, R.string.server, Toast.LENGTH_SHORT).show();
                     });
                 }
-            } catch (Exception e) { e.printStackTrace(); }
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> {
+                    Toast.makeText(LoginActivity.this, R.string.err_server_konekc, Toast.LENGTH_LONG).show();
+                });            }
         }).start();
     }
 
