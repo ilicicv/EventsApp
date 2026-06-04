@@ -94,11 +94,9 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
             return;
         }
 
-        // LOKALNA PROVERA STATUSA PRE SLANJA ZAHTEVA NA SERVER
         String currentStatus = repo.getAttendanceStatus(userId, eventId);
 
         if (id == R.id.btnInterested) {
-            // Ako je korisnik već prijavljen ("PRISUSTVUJE"), zabrani prebacivanje u zainteresovane!
             if ("PRISUSTVUJE".equals(currentStatus)) {
                 Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
                 return;

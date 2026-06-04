@@ -8,7 +8,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.ArrayList;
@@ -50,87 +49,55 @@ public class InterestedEventsActivity extends AppCompatActivity implements Adapt
     @Override
     protected void onResume() {
         super.onResume();
-        fetchInterestedEventsFromServer(mongoUserId);
+        loadData();
     }
 
-    private void fetchInterestedEventsFromServer(String urlUserId) {
-        if (urlUserId == null || urlUserId.isEmpty()) return;
+    private void loadData() {
+        if (userId != -1) {
+            ArrayList<Event> dbList = repo.getInterestedEvents(userId, "ZAINTERESOVAN");
+            EventsTable.sortEventsByPromotedAndDate(dbList);
+            adapter.setEvents(dbList);
+        }
+
+        if (mongoUserId == null || mongoUserId.isEmpty()) return;
 
         new Thread(() -> {
-            ArrayList<Event> interestedEvents = new ArrayList<>();
+            ArrayList<Event> serverList = new ArrayList<>();
             try {
                 HTTPHelper helper = new HTTPHelper();
-                String url = HTTPHelper.BASE_URL + "/attendance/" + urlUserId;
+                String url = HTTPHelper.BASE_URL + "/attendance/" + mongoUserId;
                 JSONArray array = helper.getJSONArrayFromURL(url);
 
                 if (array != null) {
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
-                        String commitment = obj.optString("commitment", "");
-
-                        if ("ZAINTERESOVAN".equals(commitment)) {
+                        if ("ZAINTERESOVAN".equals(obj.optString("commitment", ""))) {
                             JSONObject e = obj.optJSONObject("event");
-
                             if (e != null) {
-                                boolean isPromoted = e.optBoolean("promoted", false);
-                                Event event;
-
-                                if (isPromoted) {
-                                    event = EventFactory.createPromotedEvent(
-                                            e.optString("name", "Nepoznato"),
-                                            e.optString("description", ""),
-                                            e.optString("location", "Nema lokacije"),
-                                            e.optString("eventTime", ""),
-                                            e.optString("category", ""),
-                                            e.optInt("capacity", 0),
-                                            e.optInt("numberOfAttendees", 0),
-                                            e.optDouble("avgRating", 0.0),
-                                            e.optInt("numberOfRatings", 0)
-                                    );
-                                } else {
-                                    event = EventFactory.createRegularEvent(
-                                            e.optString("name", "Nepoznato"),
-                                            e.optString("description", ""),
-                                            e.optString("location", "Nema lokacije"),
-                                            e.optString("eventTime", ""),
-                                            e.optString("category", ""),
-                                            e.optInt("numberOfAttendees", 0),
-                                            e.optDouble("avgRating", 0.0),
-                                            e.optInt("numberOfRatings", 0)
-                                    );
-                                }
-                                interestedEvents.add(event);
+                                Event event = e.optBoolean("promoted", false) ?
+                                        EventFactory.createPromotedEvent(e.optString("name", ""), e.optString("description", ""), e.optString("location", "Nema lokacije"), e.optString("eventTime", ""), e.optString("category", ""), e.optInt("capacity", 0), e.optInt("numberOfAttendees", 0), e.optDouble("avgRating", 0.0), e.optInt("numberOfRatings", 0)) :
+                                        EventFactory.createRegularEvent(e.optString("name", ""), e.optString("description", ""), e.optString("location", "Nema lokacije"), e.optString("eventTime", ""), e.optString("category", ""), e.optInt("numberOfAttendees", 0), e.optDouble("avgRating", 0.0), e.optInt("numberOfRatings", 0));
+                                serverList.add(event);
                             }
                         }
                     }
+                    EventsTable.sortEventsByPromotedAndDate(serverList);
+                    runOnUiThread(() -> adapter.setEvents(serverList));
                 }
-
-                EventsTable.sortEventsByPromotedAndDate(interestedEvents);
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-            runOnUiThread(() -> {
-                adapter.setEvents(interestedEvents);
-                adapter.notifyDataSetChanged();
-            });
         }).start();
     }
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
         Event event = (Event) adapter.getItem(i);
-
         if (event != null) {
             Intent intent = new Intent(this, EventDetailsActivity.class);
             intent.putExtra("event_name", event.getName());
-
             Bundle loginData = getIntent().getExtras();
-            if (loginData != null) {
-                intent.putExtras(loginData);
-            }
-
+            if (loginData != null) intent.putExtras(loginData);
             startActivity(intent);
         }
     }

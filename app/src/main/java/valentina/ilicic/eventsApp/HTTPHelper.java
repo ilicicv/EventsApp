@@ -14,7 +14,8 @@ import java.net.URL;
 
 public class HTTPHelper {
 
-    public static final String BASE_URL = "http://192.168.0.121:3000";
+    public static final String BASE_URL = "http://192.168.100.40:3000";
+    // 10.0.2.2:3000
 
     public JSONArray getJSONArrayFromURL(String urlString) throws IOException, JSONException {
         HttpURLConnection urlConnection = null;

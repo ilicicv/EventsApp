@@ -138,6 +138,25 @@ public class UsersTable implements DatabaseTable{
         }
     }
 
+    public boolean isUserAdmin(SQLiteDatabase db, String username) {
+        Cursor cursor = null;
+        try {
+            cursor = db.query(TABLE_NAME, new String[]{COL_IS_ADMIN}, COL_USERNAME + " = ?",
+                    new String[]{username}, null, null, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                int isAdmin = cursor.getInt(cursor.getColumnIndexOrThrow(COL_IS_ADMIN));
+                return isAdmin == 1;
+            }
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+    }
+
     public String getMongoUserId(SQLiteDatabase db, String username) {
         Cursor cursor = null;
         try {

@@ -9,7 +9,6 @@ import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.ArrayList;
@@ -54,11 +53,21 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
 
         listUpcoming.setOnItemClickListener(this);
         listPast.setOnItemClickListener(this);
-
-        loadData();
     }
 
     private void loadData() {
+        if (userId != -1) {
+            ArrayList<Event> allFromDb = repo.getAttendingEvents(userId);
+            ArrayList<Event> upcomingDb = new ArrayList<>();
+            ArrayList<Event> pastDb = new ArrayList<>();
+
+            for (Event e : allFromDb) {
+                if (e.isPast()) pastDb.add(e);
+                else upcomingDb.add(e);
+            }
+            updateUI(upcomingDb, pastDb);
+        }
+
         if (mongoUserId == null || mongoUserId.isEmpty()) return;
 
         new Thread(() -> {
@@ -95,23 +104,21 @@ public class AttendingEventsActivity extends AppCompatActivity implements Adapte
                             }
                         }
                     }
+                    runOnUiThread(() -> updateUI(upcomingList, pastList));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-            runOnUiThread(() -> updateUI(upcomingList, pastList));
         }).start();
     }
 
     private void updateUI(ArrayList<Event> upcoming, ArrayList<Event> past) {
         if (upcoming.isEmpty() && past.isEmpty()) {
-            empty.setVisibility(View.VISIBLE);
-            layoutUpcoming.setVisibility(View.GONE);
-            layoutPast.setVisibility(View.GONE);
-
-            adapterUpcoming.setEvents(new ArrayList<>());
-            adapterPast.setEvents(new ArrayList<>());
+            if (adapterUpcoming.getCount() == 0 && adapterPast.getCount() == 0) {
+                empty.setVisibility(View.VISIBLE);
+                layoutUpcoming.setVisibility(View.GONE);
+                layoutPast.setVisibility(View.GONE);
+            }
         } else {
             empty.setVisibility(View.GONE);
 

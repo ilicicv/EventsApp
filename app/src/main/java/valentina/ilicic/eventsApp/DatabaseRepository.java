@@ -82,6 +82,18 @@ public class DatabaseRepository {
             db.close();
         }
     }
+    public boolean isUserAdmin(String username) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        try {
+            if (dbHelper.getUsersTable() != null) {
+                return dbHelper.getUsersTable().isUserAdmin(db, username);
+            }
+            return false;
+        } finally {
+            db.close();
+        }
+    }
+
 
     public String getMongoUserId(String username) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();

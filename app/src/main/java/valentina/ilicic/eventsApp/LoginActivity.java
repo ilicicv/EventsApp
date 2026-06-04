@@ -79,44 +79,52 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             return;
         }
 
-        JSONObject loginJson = new JSONObject();
-        try {
-            loginJson.put("username", user);
-            loginJson.put("password", pass);
-        } catch (JSONException e) { e.printStackTrace(); }
-
         new Thread(() -> {
+            boolean loginSuccess = false;
+            String mongoId = null;
+            boolean isAdmin = false;
+
             try {
                 HTTPHelper helper = new HTTPHelper();
+                JSONObject loginJson = new JSONObject();
+                loginJson.put("username", user);
+                loginJson.put("password", pass);
+
                 JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/login", loginJson);
 
                 if (response != null && response.has("username")) {
-                    boolean isAdminStatus = response.optBoolean("isAdmin", false);
-                    String mongoUserId = response.optString("_id", "");
-
-                    if (repo.getLocalUserId(user) == -1) {
-                        repo.registerUser(user, response.optString("email", ""), pass, isAdminStatus, mongoUserId);
-                    }
-
-                    getSharedPreferences("UserData", MODE_PRIVATE).edit()
-                            .putString("username", user)
-                            .putBoolean("isAdmin", isAdminStatus)
-                            .putString("mongoUserId", mongoUserId)
-                            .apply();
-
-                    runOnUiThread(() -> {
-                        startActivity(new Intent(this, EventsActivity.class));
-                        finish();
-                    });
-                } else {
-                    runOnUiThread(() -> editUsername.setError(getString(R.string.errorLogin)));
+                    loginSuccess = true;
+                    isAdmin = response.optBoolean("isAdmin", false);
+                    mongoId = response.optString("_id", "");
+                    repo.registerUser(user, response.optString("email", ""), pass, isAdmin, mongoId);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                runOnUiThread(() -> {
-                    Toast.makeText(LoginActivity.this, R.string.err_server_konekc, Toast.LENGTH_LONG).show();
-                });            }
+            }
 
+            if (!loginSuccess) {
+                int localId = repo.getLocalUserId(user);
+                if (localId != -1) {
+                    loginSuccess = true;
+                    isAdmin = repo.isUserAdmin(user);
+                    mongoId = repo.getMongoUserId(user);
+                }
+            }
+
+            if (loginSuccess) {
+                getSharedPreferences("UserData", MODE_PRIVATE).edit()
+                        .putString("username", user)
+                        .putBoolean("isAdmin", isAdmin)
+                        .putString("mongoUserId", mongoId)
+                        .apply();
+
+                runOnUiThread(() -> {
+                    startActivity(new Intent(this, EventsActivity.class));
+                    finish();
+                });
+            } else {
+                runOnUiThread(() -> Toast.makeText(LoginActivity.this, R.string.err_server, Toast.LENGTH_SHORT).show());
+            }
         }).start();
     }
 
