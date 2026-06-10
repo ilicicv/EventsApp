@@ -74,16 +74,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         String user = editUsername.getText().toString().trim();
         String pass = editPassword.getText().toString().trim();
 
-        if (user.isEmpty() || pass.isEmpty()) {
-            editUsername.setError(getString(R.string.errorLogin));
-            return;
-        }
+        if (user.isEmpty() || pass.isEmpty()) return;
 
         new Thread(() -> {
-            boolean loginSuccess = false;
-            String mongoId = null;
-            boolean isAdmin = false;
-
             try {
                 HTTPHelper helper = new HTTPHelper();
                 JSONObject loginJson = new JSONObject();
@@ -93,37 +86,29 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/login", loginJson);
 
                 if (response != null && response.has("username")) {
-                    loginSuccess = true;
-                    isAdmin = response.optBoolean("isAdmin", false);
-                    mongoId = response.optString("_id", "");
-                    repo.registerUser(user, response.optString("email", ""), pass, isAdmin, mongoId);
+                    String mongoId = response.optString("_id", "");
+                    boolean isAdmin = response.optBoolean("isAdmin", false);
+
+                    if (repo.getLocalUserId(user) == -1) {
+                        repo.registerUser(user, response.optString("email", ""), pass, isAdmin, mongoId);
+                    }
+
+                    getSharedPreferences("UserData", MODE_PRIVATE).edit()
+                            .putString("username", user)
+                            .putBoolean("isAdmin", isAdmin)
+                            .putString("mongoUserId", mongoId)
+                            .apply();
+
+                    startService(new Intent(this, ExclusiveEventService.class));
+                    runOnUiThread(() -> {
+                        startActivity(new Intent(this, EventsActivity.class));
+                        finish();
+                    });
+                } else {
+                    runOnUiThread(() -> Toast.makeText(this, R.string.err_server, Toast.LENGTH_SHORT).show());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-            }
-
-            if (!loginSuccess) {
-                int localId = repo.getLocalUserId(user);
-                if (localId != -1) {
-                    loginSuccess = true;
-                    isAdmin = repo.isUserAdmin(user);
-                    mongoId = repo.getMongoUserId(user);
-                }
-            }
-
-            if (loginSuccess) {
-                getSharedPreferences("UserData", MODE_PRIVATE).edit()
-                        .putString("username", user)
-                        .putBoolean("isAdmin", isAdmin)
-                        .putString("mongoUserId", mongoId)
-                        .apply();
-
-                runOnUiThread(() -> {
-                    startActivity(new Intent(this, EventsActivity.class));
-                    finish();
-                });
-            } else {
-                runOnUiThread(() -> Toast.makeText(LoginActivity.this, R.string.err_server, Toast.LENGTH_SHORT).show());
             }
         }).start();
     }
@@ -162,6 +147,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                             .putBoolean("isAdmin", isUserAdmin)
                             .putString("mongoUserId", mongoUserId)
                             .apply();
+
+                    Intent serviceIntent = new Intent(LoginActivity.this, ExclusiveEventService.class);
+                    startService(serviceIntent);
 
                     runOnUiThread(() -> {
                         startActivity(new Intent(this, EventsActivity.class));

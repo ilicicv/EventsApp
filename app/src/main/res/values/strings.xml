@@ -92,11 +92,13 @@
         <item>Stand-Up &amp; Theater</item>
         <item>Concert</item>
         <item>Exhibition</item>
+
     </string-array>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="no_friends_act">No friends activity to show</string>
     <string name="fr_act">Friends Activity</string>
     <string name="err_server_konekc">Greška: Nema konekcije sa serverom!</string>
+    <string name="vreme_za_prijavu">Vreme za prijavu: --:--</string>
+    <string name="isteklo_eks_dog">Prijave na ovaj događaj su istekle!</string>
+    <string name="ekskluzivni_prozor_format">Vreme za prijavu: %02d:%02d</string>
 
 </resources>

@@ -110,10 +110,6 @@ public class EventsFragment extends Fragment implements View.OnClickListener, Ad
                 JSONArray array = helper.getJSONArrayFromURL(HTTPHelper.BASE_URL + route);
 
                 if (array != null) {
-                    if (category == null) {
-                        repo.deleteAllEvents();
-                    }
-
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject obj = array.getJSONObject(i);
                         String name = obj.getString("name");

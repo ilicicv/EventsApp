@@ -13,15 +13,16 @@
         android:id="@+id/imageEvents"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2"
+        android:layout_weight="1"
         android:scaleType="centerCrop"
         />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="3"
-        android:orientation="vertical">
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp">
 
         <TextView
             android:id="@+id/txtName"
@@ -91,27 +92,38 @@
 
     </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/txtTimeLeft"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/vreme_za_prijavu"
+        android:textColor="@color/red"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:visibility="invisible"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnInterested"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="bottom">
+            android:text="@string/interested"
+            android:layout_weight="1"
+            />
 
-            <Button
-                android:id="@+id/btnInterested"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:text="@string/interested"
-                android:layout_weight="1"
-                />
-
-            <Button
-                android:id="@+id/btnAttending"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:text="@string/attending"
-                android:layout_weight="1"
-                />
-        </LinearLayout>
+        <Button
+            android:id="@+id/btnAttending"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/attending"
+            android:layout_weight="1"
+            />
+    </LinearLayout>
 
 </LinearLayout>

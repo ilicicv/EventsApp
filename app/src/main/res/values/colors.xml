@@ -16,5 +16,8 @@
     <color name="grey">#2B2B2B</color>
     <color name="orange">#FF9800</color>
     <color name="orange_light">#FFF2E0</color>
+    <color name="red">#D50E0E</color>
+    <color name="light_red">#FFBDD4</color>
+
 
 </resources>

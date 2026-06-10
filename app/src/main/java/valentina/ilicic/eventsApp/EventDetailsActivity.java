@@ -1,9 +1,16 @@
 package valentina.ilicic.eventsApp;
 
 import androidx.appcompat.app.AppCompatActivity;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Looper;
+import android.os.RemoteException;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -15,12 +22,32 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
     private String eventName;
     private Event event;
     private TextView txtCapacity;
+    private TextView txtTimeLeft;
+    private Button btnInterested, btnAttending;
     private DatabaseHelper dbHelper;
     private DatabaseRepository repo;
     private int userId = -1;
     private int eventId = -1;
     private String mongoUserId;
     String currentUser = "";
+    private IExclusiveEventService service;
+    private boolean isBound = false;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
+    private final ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            EventDetailsActivity.this.service = IExclusiveEventService.Stub.asInterface(service);
+            isBound = true;
+            updateUI();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            service = null;
+            isBound = false;
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -32,7 +59,7 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
 
         SharedPreferences prefs = getSharedPreferences("UserData", Context.MODE_PRIVATE);
         currentUser = prefs.getString("username", "");
-        mongoUserId = getSharedPreferences("UserData", MODE_PRIVATE).getString("mongoUserId", "");
+        mongoUserId = prefs.getString("mongoUserId", "");
         userId = repo.getLocalUserId(currentUser);
 
         eventName = getIntent().getStringExtra("event_name");
@@ -47,9 +74,9 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         TextView txtDesc = findViewById(R.id.txtDesc);
         TextView txtRating = findViewById(R.id.txtRating);
         txtCapacity = findViewById(R.id.txtCapacity);
-
-        Button btnInterested = findViewById(R.id.btnInterested);
-        Button btnAttending = findViewById(R.id.btnAttending);
+        txtTimeLeft = findViewById(R.id.txtTimeLeft);
+        btnInterested = findViewById(R.id.btnInterested);
+        btnAttending = findViewById(R.id.btnAttending);
 
         if (event != null) {
             txtName.setText(event.getName());
@@ -69,7 +96,6 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
 
             int count = event.getRatingCount();
             double average = event.getAverageRating();
-
             if (count > 0) {
                 txtRating.setText(getString(R.string.prose_na_ocena_0_0_0_ocena, average, count));
             } else {
@@ -82,10 +108,73 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        bindService(new Intent(this, ExclusiveEventService.class), connection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (isBound) {
+            unbindService(connection);
+            isBound = false;
+        }
+    }
+
+    private void updateUI() {
+        new Thread(() -> {
+            while (isBound) {
+                try {
+                    final boolean isOpen = service.isRegistrationOpen();
+                    final long remainingTime = service.getRemainingTime();
+
+                    SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
+                    long expirationTime = prefs.getLong("expiration_time", 0);
+                    String exclusiveEventName = prefs.getString("exclusive_event_name", "");
+
+                    boolean hasHash = (eventName != null && eventName.contains("#"));
+                    boolean isMatch = (eventName != null && eventName.equals(exclusiveEventName));
+                    boolean timeExpired = (System.currentTimeMillis() >= expirationTime);
+
+                    handler.post(() -> {
+                        if (hasHash) {
+                            if (isMatch && !timeExpired && isOpen && remainingTime > 0) {
+                                btnAttending.setEnabled(true);
+                                txtTimeLeft.setVisibility(View.VISIBLE);
+                                long minutes = (remainingTime / 1000) / 60;
+                                long seconds = (remainingTime / 1000) % 60;
+                                txtTimeLeft.setText(String.format(getString(R.string.ekskluzivni_prozor_format), minutes, seconds));
+                            } else {
+                                btnAttending.setEnabled(false);
+                                txtTimeLeft.setVisibility(View.VISIBLE);
+                                txtTimeLeft.setText(R.string.isteklo_eks_dog);
+                            }
+                        } else {
+                            txtTimeLeft.setVisibility(View.GONE);
+                            btnAttending.setEnabled(true);
+                        }
+                    });
+
+                    Thread.sleep(1000);
+                } catch (RemoteException | InterruptedException e) {
+                    break;
+                }
+            }
+        }).start();
+    }
+
+    @Override
     public void onClick(View view) {
         int id = view.getId();
 
         if (event == null || userId == -1 || eventId == -1) {
+            Toast.makeText(this, R.string.err_server, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (id == R.id.btnAttending && !btnAttending.isEnabled()) {
+            Toast.makeText(this, R.string.isteklo_eks_dog, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -95,7 +184,6 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
         }
 
         String currentStatus = repo.getAttendanceStatus(userId, eventId);
-
         if (id == R.id.btnInterested) {
             if ("PRISUSTVUJE".equals(currentStatus)) {
                 Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
@@ -123,14 +211,10 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
                     JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/attendance", json);
                     if (response != null) {
                         runOnUiThread(() -> {
-                            int resInterested = repo.setInterested(userId, eventId);
-                            if (resInterested == 1) {
-                                Toast.makeText(this, R.string.added_to_interested, Toast.LENGTH_SHORT).show();
-                            } else if (resInterested == 0) {
-                                Toast.makeText(this, R.string.msg_vec_dodat, Toast.LENGTH_SHORT).show();
-                            } else if (resInterested == -1) {
-                                Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
-                            }
+                            int res = repo.setInterested(userId, eventId);
+                            if (res == 1) Toast.makeText(this, R.string.added_to_interested, Toast.LENGTH_SHORT).show();
+                            else if (res == 0) Toast.makeText(this, R.string.msg_vec_dodat, Toast.LENGTH_SHORT).show();
+                            else if (res == -1) Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
                         });
                     }
                 } else if (id == R.id.btnAttending) {
@@ -138,19 +222,16 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
                     JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/attendance", json);
                     if (response != null) {
                         runOnUiThread(() -> {
-                            int resAttending = repo.setAttending(userId, eventId, event.isPromoted(), event.getCapacity(), event.getAttendingCount());
-                            if (resAttending == 1) {
+                            int res = repo.setAttending(userId, eventId, event.isPromoted(), event.getCapacity(), event.getAttendingCount());
+                            if (res == 1) {
                                 Toast.makeText(this, R.string.signed_up, Toast.LENGTH_SHORT).show();
                                 if (event.isPromoted()) {
                                     event.setAttendingCount(event.getAttendingCount() + 1);
                                     int newFreeSeats = event.getCapacity() - event.getAttendingCount();
                                     txtCapacity.setText(getString(R.string.slobodnih_mesta_x_y, newFreeSeats, event.getCapacity()));
                                 }
-                            } else if (resAttending == 0) {
-                                Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
-                            } else if (resAttending == -1) {
-                                Toast.makeText(this, R.string.msg_nema_slobodnih, Toast.LENGTH_SHORT).show();
-                            }
+                            } else if (res == 0) Toast.makeText(this, R.string.msg_vec_prijavljen, Toast.LENGTH_SHORT).show();
+                            else if (res == -1) Toast.makeText(this, R.string.msg_nema_slobodnih, Toast.LENGTH_SHORT).show();
                         });
                     }
                 }
