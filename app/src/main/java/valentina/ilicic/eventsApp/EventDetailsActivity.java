@@ -240,4 +240,14 @@ public class EventDetailsActivity extends AppCompatActivity implements View.OnCl
             }
         }).start();
     }
+    @Override
+    public void onBackPressed() {
+        if (isTaskRoot()) {
+            Intent intent = new Intent(this, EventsActivity.class);
+            startActivity(intent);
+            finish();
+        } else {
+            super.onBackPressed();
+        }
+    }
 }

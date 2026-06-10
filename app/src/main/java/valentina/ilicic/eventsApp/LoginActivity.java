@@ -77,6 +77,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         if (user.isEmpty() || pass.isEmpty()) return;
 
         new Thread(() -> {
+            boolean success = false;
+            String mongoId = "";
+            boolean isAdmin = false;
+
+            // 1. POKUŠAJ ONLINE (SERVER)
             try {
                 HTTPHelper helper = new HTTPHelper();
                 JSONObject loginJson = new JSONObject();
@@ -86,30 +91,39 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 JSONObject response = helper.postJSONObjectFromURL(HTTPHelper.BASE_URL + "/login", loginJson);
 
                 if (response != null && response.has("username")) {
-                    String mongoId = response.optString("_id", "");
-                    boolean isAdmin = response.optBoolean("isAdmin", false);
+                    mongoId = response.optString("_id", "");
+                    isAdmin = response.optBoolean("isAdmin", false);
 
                     if (repo.getLocalUserId(user) == -1) {
                         repo.registerUser(user, response.optString("email", ""), pass, isAdmin, mongoId);
                     }
-
-                    getSharedPreferences("UserData", MODE_PRIVATE).edit()
-                            .putString("username", user)
-                            .putBoolean("isAdmin", isAdmin)
-                            .putString("mongoUserId", mongoId)
-                            .apply();
-
-                    startService(new Intent(this, ExclusiveEventService.class));
-                    runOnUiThread(() -> {
-                        startActivity(new Intent(this, EventsActivity.class));
-                        finish();
-                    });
-                } else {
-                    runOnUiThread(() -> Toast.makeText(this, R.string.err_server, Toast.LENGTH_SHORT).show());
+                    success = true;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+
+                int adminStatus = repo.loginUser(user, pass, "");
+
+                if (adminStatus != -1) {
+                    isAdmin = (adminStatus == 1);
+                    mongoId = repo.getMongoUserId(user);
+                    success = true;
+                }
             }
+
+            if (success) {
+                getSharedPreferences("UserData", MODE_PRIVATE).edit()
+                        .putString("username", user)
+                        .putBoolean("isAdmin", isAdmin)
+                        .putString("mongoUserId", mongoId)
+                        .apply();
+
+                startService(new Intent(this, ExclusiveEventService.class));
+                runOnUiThread(() -> {
+                    startActivity(new Intent(this, EventsActivity.class));
+                    finish();
+                });
+            } else {
+                runOnUiThread(() -> Toast.makeText(this, R.string.err_server, Toast.LENGTH_SHORT).show());            }
         }).start();
     }
 

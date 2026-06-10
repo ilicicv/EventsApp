@@ -61,11 +61,6 @@ public class EventAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-    public void deleteAllEvents() {
-        this.events.clear();
-        notifyDataSetChanged();
-    }
-
     @Override
     public int getCount() {
         return events.size();

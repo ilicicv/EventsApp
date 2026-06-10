@@ -26,8 +26,8 @@ public class ExclusiveEventService extends Service {
 
     private static final String TAG = "ExclusiveEventService";
     private static final String CHANNEL_ID = "ExclusiveEventChannel";
-    private static final long REGISTRATION_WINDOW = 30 * 1000;
-    private static final long REPEAT_INTERVAL = 5 * 60 * 1000;
+    private static final long REGISTRATION_WINDOW = 5 * 60 * 1000;
+    private static final long REPEAT_INTERVAL = 24 * 60 * 60 * 1000;
     private final ExclusiveEventBinder binder = new ExclusiveEventBinder();
     private final HTTPHelper httpHelper = new HTTPHelper();
     private Thread countdownThread;
@@ -37,15 +37,12 @@ public class ExclusiveEventService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "onCreate: Servis je uspešno kreiran.");
         createNotificationChannel();
         dbHelper = new DatabaseHelper(this);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand: Servis je 'okinuo' i pokreće pozadinsku nit.");
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -77,14 +74,9 @@ public class ExclusiveEventService extends Service {
                     newEvent.put("eventTime", timeNow);
 
                     String url = HTTPHelper.BASE_URL + "/events";
-
-                    Log.d(TAG, "MREŽA: Pokušavam POST na URL: " + url);
-                    Log.d(TAG, "MREŽA: JSON telo koje šaljem: " + newEvent.toString());
-
                     JSONObject response = httpHelper.postJSONObjectFromURL(url, newEvent);
 
                     if (response != null) {
-                        Log.d(TAG, "MREŽA: Server uspešno kreirao event! Odgovor baze: " + response.toString());
 
                         final String eventName = response.getString("name");
                         long expirationTime = System.currentTimeMillis() + REGISTRATION_WINDOW;
@@ -96,7 +88,6 @@ public class ExclusiveEventService extends Service {
                                 .apply();
 
                         try {
-                            Log.d(TAG, "BAZA: Pokrećem sinhronizaciju novog događaja sa lokalnom SQLite bazom...");
                             JSONArray serverEvents = httpHelper.getJSONArrayFromURL(HTTPHelper.BASE_URL + "/events");
                             if (serverEvents != null) {
                                 for (int i = 0; i < serverEvents.length(); i++) {
@@ -107,14 +98,11 @@ public class ExclusiveEventService extends Service {
                                         eventsTable.insertEvent(dbHelper.getWritableDatabase(), mongoId, eventName,
                                                 obj.getString("description"), obj.getString("location"),
                                                 obj.getString("eventTime"), obj.getString("category"), 0, 100); // IZMIJENJENO NA 0
-                                        Log.d(TAG, "BAZA: Događaj uspešno upisan u SQLite sa MongoID: " + mongoId);
                                         break;
                                     }
                                 }
                             }
-                        } catch (Exception e) {
-                            Log.e(TAG, "BAZA GREŠKA: Neuspešna sinhronizacija sa lokalnom bazom", e);
-                        }
+                        } catch (Exception e) {}
 
                         binder.setEventStatus(1);
                         binder.setRegistrationOpen(true);
@@ -132,19 +120,16 @@ public class ExclusiveEventService extends Service {
                         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                Log.d(TAG, "HANDLER: Ponovo pokrećem servis nakon intervala od 5 minuta...");
                                 Intent serviceIntent = new Intent(getApplicationContext(), ExclusiveEventService.class);
                                 startService(serviceIntent);
                             }
                         }, REPEAT_INTERVAL);
 
-                    } else {
-                        Log.e(TAG, "MREŽA GREŠKA: `response` je NULL. HTTPHelper nije uspeo da izvrši POST zahtev (Proveri mrežnu rutu na serveru ili konekciju)!");
                     }
                 } catch (JSONException e) {
                     Log.e(TAG, "JSON GREŠKA: Greška u parsiranju JSON-a unutar servisa: " + e.getMessage(), e);
                 } catch (IOException e) {
-                    Log.e(TAG, "MREŽNA GREŠKA (IOException): Server je nedostupan ili je IP adresa pogrešna! Detalji: " + e.getMessage(), e);
+                    Log.e(TAG, "IOException: Server je nedostupan: " + e.getMessage(), e);
                 }
             }
         }).start();
@@ -191,7 +176,6 @@ public class ExclusiveEventService extends Service {
     private void regOpenNotification(String eventName, long expirationTime) {
         Intent intent = new Intent(this, EventDetailsActivity.class);
         intent.putExtra("event_name", eventName);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
@@ -234,7 +218,7 @@ public class ExclusiveEventService extends Service {
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Ekskluzivni Događaji";
-            String description = "Kanali za obaveštenja o ekskluzivnim prozorima prijava";
+            String description = "Kanali za obaveštenja o ekskluzivnim događajima";
             int importance = NotificationManager.IMPORTANCE_HIGH;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
